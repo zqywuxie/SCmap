@@ -55,6 +55,14 @@ BACKUP="${APP_NAME}-previous"
 switching=0
 owned() { [[ "$(docker inspect -f '{{index .Config.Labels "org.scmap.app"}}' "$1" 2>/dev/null)" == "$APP_NAME" ]]; }
 exists() { docker container inspect "$1" >/dev/null 2>&1; }
+wait_http() {
+    local attempt
+    for attempt in {1..15}; do
+        if curl --fail --silent --show-error --connect-timeout 2 --max-time 5 "$1"; then return 0; fi
+        sleep 1
+    done
+    return 1
+}
 for name in "$APP_NAME" "$BACKUP"; do
     if exists "$name" && ! owned "$name"; then fail "Container $name belongs to another application"; fi
 done
@@ -74,8 +82,8 @@ docker build --build-arg "NGINX_IMAGE=$NGINX_IMAGE" --label "org.scmap.revision=
 docker run --rm --entrypoint nginx "$IMAGE" -t
 docker run -d --name "$CANDIDATE" --label "org.scmap.app=$APP_NAME" -p 127.0.0.1::80 "$IMAGE" >/dev/null
 TEST_PORT="$(docker port "$CANDIDATE" 80/tcp)"; TEST_PORT="${TEST_PORT##*:}"
-curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 "http://127.0.0.1:$TEST_PORT/healthz"
-curl --fail --silent --show-error "http://127.0.0.1:$TEST_PORT/data/manifest.json" >/dev/null
+wait_http "http://127.0.0.1:$TEST_PORT/healthz"
+wait_http "http://127.0.0.1:$TEST_PORT/data/manifest.json" >/dev/null
 docker rm -f "$CANDIDATE" >/dev/null
 if exists "$BACKUP"; then docker rm "$BACKUP" >/dev/null; fi
 if exists "$APP_NAME"; then
@@ -86,6 +94,6 @@ if exists "$BACKUP"; then docker stop "$BACKUP" >/dev/null; fi
 docker run -d --name "$APP_NAME" --restart unless-stopped --label "org.scmap.app=$APP_NAME" \
     --label "org.scmap.revision=$REVISION" -p "$BIND_ADDRESS:$PORT:80" "$IMAGE" >/dev/null
 HEALTH_HOST="$BIND_ADDRESS"; [[ "$HEALTH_HOST" != '0.0.0.0' ]] || HEALTH_HOST=127.0.0.1
-curl --fail --silent --show-error --retry 10 --retry-connrefused --retry-delay 1 "http://$HEALTH_HOST:$PORT/healthz"
+wait_http "http://$HEALTH_HOST:$PORT/healthz"
 switching=0
 echo "DEPLOY_OK $REVISION http://$BIND_ADDRESS:$PORT (previous container: $BACKUP)"
