@@ -18,7 +18,7 @@ cd SCmap
 bash deploy.sh
 ```
 
-默认通过 `http://服务器IP:8080/` 访问。之后再次执行 `bash deploy.sh`，自动拉取 main 并更新部署。公网访问推荐按部署文档配置 HTTPS。
+默认通过 `http://服务器IP:10323/` 访问。之后再次执行 `bash deploy.sh`，自动拉取 main 并更新部署。公网访问推荐按部署文档配置 HTTPS。
 
 ## 本地查看
 

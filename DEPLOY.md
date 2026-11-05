@@ -17,7 +17,7 @@ bash deploy.sh --check  # 检查依赖与数据，不修改容器
 bash deploy.sh
 ```
 
-默认监听 `0.0.0.0:8080`。在服务器防火墙／云安全组中放行需要的端口，再访问 `http://服务器IP:8080/`。网页用绝对 `/data/` 路径，须部署在域名根路径 `/`。
+默认监听 `0.0.0.0:10323`。在服务器防火墙／云安全组中放行需要的端口，再访问 `http://服务器IP:10323/`。网页用绝对 `/data/` 路径，须部署在域名根路径 `/`。
 
 如服务器上仅有一份 deploy.sh，也可执行：脚本会在指定路径不存在时自动克隆仓库。
 
@@ -42,7 +42,7 @@ bash deploy.sh
 | REPO_URL | git@github.com:zqywuxie/SCmap.git | 拉取地址，须与 origin 一致 |
 | BRANCH | main | 拉取分支 |
 | APP_NAME | scmap | 容器名，避免与其他应用重名 |
-| PORT | 8080 | 主机 HTTP 端口 |
+| PORT | 10323 | 主机 HTTP 端口 |
 | BIND_ADDRESS | 0.0.0.0 | IPv4 监听地址 |
 | NGINX_IMAGE | Dockerfile 中的已验证 digest | 升级基础镜像或使用内部镜像 |
 
@@ -50,11 +50,11 @@ bash deploy.sh
 
 ## 公网 HTTPS
 
-建议容器仅监听 `127.0.0.1:8080`，由已有 Nginx／Caddy 或云负载均衡终结 TLS。域名和证书确定后，将域名根路径代理到容器；以下放入已有 HTTPS server 块：
+建议容器仅监听 `127.0.0.1:10323`，由已有 Nginx／Caddy 或云负载均衡终结 TLS。域名和证书确定后，将域名根路径代理到容器；以下放入已有 HTTPS server 块：
 
 ```nginx
 location / {
-    proxy_pass http://127.0.0.1:8080;
+    proxy_pass http://127.0.0.1:10323;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -66,8 +66,8 @@ location / {
 ## 验证与排障
 
 ```bash
-curl -f http://127.0.0.1:8080/healthz
-curl -f http://127.0.0.1:8080/data/manifest.json
+curl -f http://127.0.0.1:10323/healthz
+curl -f http://127.0.0.1:10323/data/manifest.json
 docker ps --filter name=scmap
 docker logs --tail 100 scmap
 ```
