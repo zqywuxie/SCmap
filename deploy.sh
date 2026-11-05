@@ -11,7 +11,7 @@ SCMAP_DIR="${SCMAP_DIR:-$DEFAULT_DIR}"
 APP_NAME="${APP_NAME:-scmap}"
 PORT="${PORT:-8080}"
 BIND_ADDRESS="${BIND_ADDRESS:-0.0.0.0}"
-NGINX_IMAGE="${NGINX_IMAGE:-nginx@sha256:90babf6ca20a03b57f1ecabb39163d95842e6c8e010cebca9eb4b6ffa277b955}"
+NGINX_IMAGE="${NGINX_IMAGE:-nginx@sha256:0e52bd054126cdc040b1276c0af347aeb02a41b9cfe305d6094767ac30e97949}"
 export REPO_URL BRANCH SCMAP_DIR APP_NAME PORT BIND_ADDRESS NGINX_IMAGE
 fail() { echo "ERROR: $*" >&2; exit 1; }
 for cmd in git docker curl python3 flock; do command -v "$cmd" >/dev/null || fail "Install $cmd first (see DEPLOY.md)."; done
@@ -42,6 +42,7 @@ if [[ "${1:-}" != '--activate' ]]; then
     flock -n 9 || fail 'Another deployment is running'
     git fetch --prune origin "$BRANCH"
     git merge --ff-only "origin/$BRANCH"
+    [[ "$(git rev-parse HEAD)" == "$(git rev-parse "origin/$BRANCH")" ]] || fail 'Local commits are ahead of origin; push or move them before deployment.'
     # Execute the newly fetched script, keeping the same process and deployment lock.
     exec bash "$SCMAP_DIR/deploy.sh" --activate
 fi
