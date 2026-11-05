@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="在作者原始 RNA UMAP 上探索 TCR V/J 单基因和同链 V+J 组合的细胞亚型分布。">
+  <title>TCRCellNet · V/J Atlas</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231c4e48'/%3E%3Ccircle cx='12' cy='12' r='4' fill='%23f2cf89'/%3E%3Ccircle cx='21' cy='20' r='5' fill='%23c6e3d7'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./src/style.css">
+  <script type="module" src="./src/main.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="masthead">
+      <a class="wordmark" href="./" aria-label="TCRCellNet 首页"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>TCRCellNet<span class="brand-divider">/</span><span class="brand-section">V/J Atlas</span></a>
+      <span class="atlas-tag"><span class="status-dot"></span> Pan-disease · Human T cells</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div><p class="eyebrow">RECEPTOR × CELL STATE</p><h1 id="page-title">看见 V/J 基因的亚型分布<span class="title-dot">.</span></h1><p class="intro-copy">以 RNA 亚型为参考，探索携带同一 TCR 基因的细胞位于何处。</p></div>
+        <div class="cohort-total"><span id="cohort-number">—</span><span>当前队列细胞 <span id="study-count">— 项研究</span></span></div>
+      </section>
+
+      <div class="toolbar" aria-label="队列筛选">
+        <div class="lineage-toggle" aria-label="细胞谱系"><button type="button" class="active" data-lineage="CD8" aria-pressed="true">CD8 <span>T cells</span></button><button type="button" data-lineage="CD4" aria-pressed="false">CD4 <span>T cells</span></button></div>
+        <div class="filter-controls">
+          <label class="select-label">研究来源<select id="study-select" aria-label="研究来源"><option value="all">全部研究</option></select></label>
+          <label class="select-label">细胞范围<select id="cohort-select" aria-label="细胞范围"><option value="matched">RNA–TCR 已匹配</option><option value="all">全部 RNA 注释细胞</option></select></label>
+        </div>
+        <button type="button" class="reset-button" id="reset-view" title="恢复两图的初始视角"><span aria-hidden="true">↺</span> 重置视角</button>
+      </div>
+
+      <div id="notice" role="status" aria-live="polite" class="notice">正在读取真实图谱数据…</div>
+
+      <div class="map-navigation"><h2 id="maps-heading" tabindex="-1">细胞图谱</h2><div class="map-buttons" aria-label="两图联动视角操作"><button type="button" data-view="in" aria-label="放大两图">＋</button><button type="button" data-view="out" aria-label="缩小两图">−</button><button type="button" data-view="left" aria-label="视角向左">←</button><button type="button" data-view="right" aria-label="视角向右">→</button><button type="button" data-view="up" aria-label="视角向上">↑</button><button type="button" data-view="down" aria-label="视角向下">↓</button><button type="button" id="return-results">返回结果 ↓</button></div></div>
+      <p id="map-context" class="map-context"></p>
+      <section class="plots" aria-label="并列 UMAP">
+        <article class="plot-panel">
+          <div class="panel-heading"><div><span class="panel-index">01</span><h2>亚型参考</h2></div><span class="panel-meta">AUTHOR RNA UMAP</span></div>
+          <div class="plot-stage" id="reference-stage"><canvas id="reference-canvas" aria-label="按原始 RNA 亚型着色的 UMAP"></canvas><div class="plot-labels" id="reference-labels" aria-hidden="true"></div><div class="axis-mark" aria-hidden="true"><span>UMAP 2</span><span>UMAP 1</span></div><span class="plot-empty" id="reference-empty"></span></div>
+          <div class="plot-footer"><span><span class="small-dot green"></span> 原始亚型注释</span><span id="display-count">— 个细胞 · 全量显示</span></div>
+        </article>
+        <article class="plot-panel">
+          <div class="panel-heading"><div><span class="panel-index">02</span><h2 id="highlight-title">基因携带细胞</h2></div><span class="gene-pill" id="gene-pill">未选择基因</span></div>
+          <div class="plot-stage" id="highlight-stage"><canvas id="highlight-canvas" aria-label="所选 V/J 基因携带细胞的 UMAP"></canvas><div class="axis-mark" aria-hidden="true"><span>UMAP 2</span><span>UMAP 1</span></div><span class="plot-empty" id="highlight-empty">从下方选择一个 V/J 基因</span></div>
+          <div class="plot-footer"><div class="highlight-key"><span><span class="subtype-color-key" aria-hidden="true"><i></i><i></i><i></i></span>携带细胞 · 亚型颜色</span><span><span class="small-dot gray"></span>其他细胞</span></div><span id="carrier-count">—</span></div>
+        </article>
+      </section>
+      <div class="plot-annotations"><div class="subtype-legend" id="subtype-legend" aria-label="亚型图例"></div><span class="navigation-hint">颜色＝RNA 亚型 · 灰色＝其他细胞<br>滚轮缩放 · 拖动平移 · 双击重置<br>触屏：图内拖动平移，使用上方按钮缩放；图外滑动页面</span></div>
+
+      <section class="gene-section" aria-labelledby="gene-heading">
+        <div class="exploration-switch" aria-label="浏览方向"><button type="button" data-direction="gene" class="active" aria-pressed="true">按基因看亚型</button><button type="button" data-direction="subtype" aria-pressed="false">按亚型看基因排名</button></div>
+        <div class="gene-heading"><div><h2 id="gene-heading" tabindex="-1">选择 V/J 基因</h2></div><div class="mode-toggle" aria-label="基因选择模式"><button type="button" data-mode="single" class="active" aria-pressed="true">单基因</button><button type="button" data-mode="pair" aria-pressed="false">V + J 组合</button></div></div>
+        <div class="gene-controls">
+          <div class="locus-tabs" aria-label="V/J 基因类型"><button type="button" data-locus="TRAV" class="active" aria-pressed="true">TRAV <span>α · V</span></button><button type="button" data-locus="TRAJ" aria-pressed="false">TRAJ <span>α · J</span></button><button type="button" data-locus="TRBV" aria-pressed="false">TRBV <span>β · V</span></button><button type="button" data-locus="TRBJ" aria-pressed="false">TRBJ <span>β · J</span></button><button type="button" data-chain="TRA" aria-pressed="true" hidden>TRA <span>α · V + J</span></button><button type="button" data-chain="TRB" aria-pressed="false" hidden>TRB <span>β · V + J</span></button></div>
+          <div class="gene-picker" id="primary-gene-picker"><label class="sr-only" for="gene-search">搜索基因</label><span class="search-icon" aria-hidden="true">⌕</span><input id="gene-search" type="search" placeholder="搜索基因，例如 TRAV1-2" autocomplete="off"><label class="sr-only" for="gene-select">选择基因</label><select id="gene-select" aria-label="选择基因"><option value="">选择一个基因</option></select></div>
+          <span class="pair-plus" id="pair-plus" hidden>+</span>
+          <div class="gene-picker" id="j-picker" hidden><label class="sr-only" for="gene-search-j">搜索 J 基因</label><span class="search-icon" aria-hidden="true">⌕</span><input id="gene-search-j" type="search" placeholder="搜索 J 基因" autocomplete="off"><label class="sr-only" for="gene-select-j">选择 J 基因</label><select id="gene-select-j" aria-label="选择 J 基因"><option value="">选择 J 基因</option></select></div>
+          <button type="button" id="clear-gene" class="text-button">清除选择</button>
+        </div>
+        <div id="quick-genes" class="quick-genes" aria-label="常见基因"></div>
+        <p id="gene-options-info" class="options-info" role="status"></p>
+        <div id="selection-feedback" class="ranking-selection" role="status" aria-live="polite"></div>
+        <div id="rank-controls" class="rank-controls" hidden>
+          <label>细胞亚型<select id="rank-subtype" aria-label="选择排名亚型"></select></label>
+          <label>排序依据<select id="rank-sort" aria-label="基因排名依据"><option value="usage">亚型内携带率（常用程度）</option><option value="subtypeShare">携带者属于该亚型的比例（集中程度）</option></select></label>
+          <label class="rank-search-label">搜索排名<input id="rank-search" type="search" aria-label="搜索基因排名" placeholder="搜索基因或 V+J 组合" autocomplete="off"></label>
+        </div>
+      </section>
+
+      <section class="distribution-section" aria-labelledby="distribution-title">
+        <div class="distribution-heading"><div><h2 id="distribution-title">亚型中的基因使用</h2><p id="distribution-description">选择基因后查看各亚型的携带率与构成。</p></div><div class="call-quality" id="call-quality"></div></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th scope="col">细胞亚型</th>
+              <th scope="col">细胞数（携带 / 有效）</th>
+              <th scope="col" class="metric-header">
+                <strong class="metric-title">亚型内携带率</strong><span class="metric-question">该亚型中，有多少携带？</span>
+                <span class="metric-formula">该亚型携带数 ÷ <b>该亚型有效细胞数</b></span>
+              </th>
+              <th scope="col" class="metric-header">
+                <strong class="metric-title" id="composition-heading">携带者亚型占比</strong><span class="metric-question">携带者中，有多少是该亚型？</span>
+                <span class="metric-formula">该亚型携带数 ÷ <b>全部携带细胞数</b></span>
+              </th>
+              <th scope="col" class="metric-header">
+                <strong class="metric-title">背景亚型占比</strong><span class="metric-question">背景中，有多少是该亚型？</span>
+                <span class="metric-formula">该亚型有效细胞数 ÷ <b>全部有效细胞数</b></span>
+              </th>
+            </tr></thead>
+            <tbody id="distribution-body"><tr><td colspan="5" class="table-placeholder">正在读取队列…</td></tr></tbody>
+          </table>
+        </div>
+        <p class="table-note" id="table-note">有效细胞指所选位点有明确调用的细胞。所有比例均基于当前筛选队列；分母为 0 时显示“—”。</p>
+      </section>
+
+      <section class="ranking-section" id="ranking-section" aria-labelledby="ranking-title" hidden>
+        <div class="distribution-heading"><div><h2 id="ranking-title">亚型内的基因排名</h2><p id="ranking-description"></p></div><div class="call-quality" id="ranking-quality"></div></div>
+        <div class="ranking-selection" id="ranking-selection" role="status" aria-live="polite">点击排名中的基因，联动右侧 UMAP 高亮。</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th scope="col">排名</th><th scope="col" id="rank-gene-heading">基因</th><th scope="col">该亚型携带细胞数</th><th scope="col" class="metric-header"><strong class="metric-title" id="rank-usage-heading">亚型内携带率 ↓</strong><span class="metric-question">该亚型中，有多少携带？</span><span class="metric-formula">该基因在此亚型的携带数 ÷ <b>此亚型有效细胞数</b></span></th><th scope="col" class="metric-header"><strong class="metric-title" id="rank-share-heading">携带者亚型占比</strong><span class="metric-question">该基因携带者中，有多少属此亚型？</span><span class="metric-formula">该基因在此亚型的携带数 ÷ <b>该基因全部携带数</b></span></th><th scope="col">该基因全部携带数</th></tr></thead>
+          <tbody id="ranking-body"></tbody>
+        </table></div>
+        <div class="rank-pagination"><span id="rank-page-info"></span><div><button type="button" id="rank-prev">上一页</button><button type="button" id="rank-next">下一页</button></div></div>
+        <p class="table-note" id="ranking-note"></p>
+      </section>
+
+    </main>
+  </div>
+  <div class="explorer-dock" id="explorer-dock" hidden><span id="dock-context"></span><div><button type="button" data-jump="maps">查看 UMAP ↑</button><button type="button" data-jump="results">返回结果 ↓</button><button type="button" data-jump="controls">调整选择</button></div></div>
+  <div class="cell-tooltip" id="cell-tooltip" role="tooltip" hidden></div>
+</body>
+</html>
