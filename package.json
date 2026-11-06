@@ -1,1 +1,1 @@
-{"name":"scmap","private":true,"type":"module","scripts":{"test":"node --test stats.test.mjs"}}
+{"name":"scmap","private":true,"type":"module","scripts":{"test":"node --test stats.test.mjs clone-ridges.test.mjs"}}

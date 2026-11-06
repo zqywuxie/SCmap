@@ -10,7 +10,10 @@ def main():
     manifest = json.loads((root / 'manifest.json').read_text(encoding='utf-8'))
     checked = 0
     for lineage, meta in manifest['lineages'].items():
-        for name in ('coords', 'attributes', 'matched', 'source_rows'):
+        names = ['coords', 'attributes', 'matched', 'source_rows']
+        if 'clone_expansion' in manifest:
+            names.extend(['clone_unit', 'clone_size'])
+        for name in names:
             descriptor = meta['files'][name]
             path = (root / lineage / descriptor['path']).resolve()
             if not path.is_relative_to(root.resolve()):

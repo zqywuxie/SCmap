@@ -1,5 +1,6 @@
 import { summarize, percent, subtypeGeneCounts, sortGeneRanks } from './stats.js';
 import { GenePicker } from './gene-picker.js';
+import { cloneDistributions, renderCloneRidges } from './clone-ridges.js';
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('en-US');
@@ -14,6 +15,41 @@ const esc = (text) => String(text).replace(/[&<>"']/g, (c) =>
 const colorRGB = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 let renderers = [];
 let genePicker, jPicker;
+let analysis = 'vj', cloneRequest = 0, cloneResult = null;
+
+async function updateCloneAnalysis() {
+  if (analysis !== 'clone' || !state.data) return;
+  const request = ++cloneRequest, data = state.data, lineage = state.lineage;
+  $('clone-ridges').replaceChildren(); $('clone-summary').replaceChildren();
+  if (!data.info.files.clone_size || !data.info.files.clone_unit) {
+    $('clone-status').textContent = '当前数据包尚未包含克隆大小，请更新数据包。'; return;
+  }
+  $('clone-status').textContent = '正在读取并统计克隆大小…';
+  try {
+    if (!data.clonePromise) data.clonePromise = Promise.all([
+      loadArray(lineage, data.info.files.clone_unit, Uint32Array),
+      loadArray(lineage, data.info.files.clone_size, Uint32Array),
+    ]).catch(error => { data.clonePromise = null; throw error; });
+    const [units, sizes] = await data.clonePromise;
+    if (request !== cloneRequest || analysis !== 'clone' || data !== state.data) return;
+    const stride = state.manifest.attributes.length;
+    const sampleField = state.manifest.attributes.indexOf('sample_name');
+    const samples = [...new Set(Array.from(state.filtered, i => data.attrs[i * stride + sampleField]))];
+    const selected = $('clone-sample').value;
+    $('clone-sample').innerHTML = '<option value="all">全部样本</option>' + samples.map(code => `<option value="${code}">${esc(state.manifest.codebooks.sample_name[code])}</option>`).join('');
+    $('clone-sample').value = samples.some(code => String(code) === selected) ? selected : 'all';
+    const sample = $('clone-sample').value;
+    const indices = sample === 'all' ? state.filtered : state.filtered.filter(i => String(data.attrs[i * stride + sampleField]) === sample);
+    cloneResult = cloneDistributions(data.attrs, indices, stride,
+      state.manifest.attributes.indexOf('cell_subtype_v3'), units, sizes, data.info.subtypes, $('clone-weight').value);
+    renderCloneRidges($('clone-ridges'), cloneResult, $('clone-weight').value, Number($('clone-bandwidth').value));
+    const eligible = cloneResult.groups.reduce((sum, group) => sum + group.cells, 0);
+    $('clone-status').textContent = `${lineage} · ${fmt(eligible)} 个可分配克隆的配对细胞 · 身份字段缺失排除 ${fmt(cloneResult.excluded)} 个。`;
+    $('clone-summary').innerHTML = cloneResult.groups.map(group => `<tr><td>${esc(group.label)}</td><td class="numeric">${fmt(group.cells)}</td><td class="numeric">${fmt(group.units.size)}</td><td class="numeric">${group.cells ? (100 * group.expanded / group.cells).toFixed(1) + '%' : '—'}</td><td class="numeric">${group.histogram.size ? fmt(Math.max(...group.histogram.keys())) : '—'}</td></tr>`).join('');
+  } catch (error) {
+    if (request === cloneRequest) $('clone-status').textContent = `克隆数据读取失败：${error.message}`;
+  }
+}
 let framePending = false;
 let resultsPosition = null;
 const mobileLayout = window.matchMedia('(max-width:760px)');
@@ -215,6 +251,7 @@ function resetView() {
   if (!state.data) return;
   const [xmin, ymin, xmax, ymax] = state.data.info.bounds;
   const rect = $('reference-canvas').getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
   const scale = Math.max((xmax - xmin) / (rect.width * 0.88), (ymax - ymin) / (rect.height * 0.84));
   state.view = { cx: (xmin + xmax) / 2, cy: (ymin + ymax) / 2, scale };
   state.baseScale = scale;
@@ -234,7 +271,7 @@ function updateLabels() {
 }
 
 async function fetchJSON(path) {
-  const response = await fetch(path);
+  const response = await fetch(path, { cache: 'no-store' });
   if (!response.ok) throw new Error(`数据读取失败 (${response.status})：${path}`);
   return response.json();
 }
@@ -293,7 +330,7 @@ async function loadLineage(lineage) {
 }
 
 function setControlsDisabled(disabled) {
-  document.querySelectorAll('.toolbar button,.toolbar select,.gene-section button,.gene-section input,.gene-section select,.map-buttons button,.explorer-dock button,.ranking-section button')
+  document.querySelectorAll('.toolbar button,.toolbar select,.gene-section button,.gene-section input,.gene-section select,.map-buttons button,.explorer-dock button,.ranking-section button,#clone-section select,.analysis-tabs button')
     .forEach((element) => { element.disabled = disabled; });
 }
 
@@ -328,6 +365,7 @@ function applyFilters(reset = false) {
   $('reference-empty').textContent = count ? '' : '当前筛选下没有细胞';
   if (reset || !state.view) resetView(); else scheduleDraw();
   state.filterMs = performance.now() - start;
+  updateCloneAnalysis();
 }
 
 function partnerLocus() { return state.chain === 'TRA' ? 'TRAJ' : 'TRBJ'; }
@@ -658,6 +696,18 @@ async function init() {
     $('rank-prev').addEventListener('click', () => { if (!state.loading && state.rankPage > 0) { state.rankPage--; renderGeneRanking(); } });
     $('rank-next').addEventListener('click', () => { if (!state.loading) { state.rankPage++; renderGeneRanking(); } });
     $('study-select').addEventListener('change', (e) => { state.study = e.target.value; applyFilters(); });
+    document.querySelectorAll('[data-analysis]').forEach(button => button.addEventListener('click', () => {
+      analysis = button.dataset.analysis;
+      document.body.classList.toggle('clone-analysis', analysis === 'clone');
+      $('clone-section').hidden = analysis !== 'clone';
+      document.querySelectorAll('[data-analysis]').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.analysis === analysis);
+        tab.setAttribute('aria-pressed', String(tab.dataset.analysis === analysis));
+      });
+      if (analysis === 'clone') updateCloneAnalysis();
+      else { cloneRequest++; resetView(); }
+    }));
+    ['clone-sample', 'clone-weight', 'clone-bandwidth'].forEach(id => $(id).addEventListener('change', updateCloneAnalysis));
     $('quick-genes').addEventListener('click', (e) => { const b = e.target.closest('[data-gene]'); if (b) {
       if (state.mode === 'pair') state.geneJ = Number(b.dataset.geneJ);
       chooseGene(Number(b.dataset.gene));
@@ -677,6 +727,8 @@ async function init() {
 
 // Read-only inspection supports count, coordinate, and browser-performance validation.
 window.tcrExplorer = Object.freeze({
+  clones: () => cloneResult ? { groups: cloneResult.groups.map(group => ({ label: group.label, cells: group.cells,
+    expanded: group.expanded, units: group.units.size, histogram: [...group.histogram] })), excluded: cloneResult.excluded } : null,
   snapshot: () => ({ lineage: state.lineage, mode: state.mode, chain: state.chain, locus: state.locus, gene: state.gene,
     direction: state.direction, rankSubtype: state.rankSubtype, rankSort: state.rankSort,
     locusJ: state.mode === 'pair' ? partnerLocus() : null, geneJ: state.geneJ,

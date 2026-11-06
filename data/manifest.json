@@ -1922,6 +1922,26 @@
           "bytes": 4100464,
           "compressed_bytes": 1426086,
           "sha256": "1cdd0b68ef6398bc4d13e31bd77eb13ea039727566d9db07fec025a2a86e47a5"
+        },
+        "clone_unit": {
+          "path": "clone_unit.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            1025116
+          ],
+          "bytes": 4100464,
+          "compressed_bytes": 1906670,
+          "sha256": "d3357bc5bb0e507e961b396cb990caa89ad1fb190c59367bba0738738c8254bb"
+        },
+        "clone_size": {
+          "path": "clone_size.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            1025116
+          ],
+          "bytes": 4100464,
+          "compressed_bytes": 831038,
+          "sha256": "9acefc72f47d06c6bc4d11d3bb4e76b6df4863d72e65aa25d91b27816bb91fd0"
         }
       },
       "subtypes": [
@@ -2067,6 +2087,26 @@
           "bytes": 4569776,
           "compressed_bytes": 1587496,
           "sha256": "72a886537e2198b61f52ac9b81e22c7e437c350f73da0d92446ecaf6e8c4e011"
+        },
+        "clone_unit": {
+          "path": "clone_unit.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            1142444
+          ],
+          "bytes": 4569776,
+          "compressed_bytes": 2749319,
+          "sha256": "77564e1aece0c89c1891cc1c635489eb90a67e7ccbd215e2b6be186ccb430ef5"
+        },
+        "clone_size": {
+          "path": "clone_size.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            1142444
+          ],
+          "bytes": 4569776,
+          "compressed_bytes": 235744,
+          "sha256": "e4c5fb4baa93ad7aca5a170a417ae268bbb25a993715407a7d70f1be279f57cc"
         }
       },
       "subtypes": [
@@ -2138,6 +2178,123 @@
         }
       ],
       "cell_id_sha256": "20ae3f1ef0fcbad495ff6ab74b10672af763f142e59c8cc78b5a6a314fa3a2a2"
+    }
+  },
+  "clone_expansion": {
+    "version": 1,
+    "identity": "author obs.tcr",
+    "scope": "study + individual + sample + lineage",
+    "minimum_expanded_size": 2,
+    "excluded": "unmatched or missing study/individual/sample/tcr",
+    "report": {
+      "CD8": {
+        "matched": 1024993,
+        "eligible": 1024993,
+        "excluded_identity": 0,
+        "sample_clone_units": 413330,
+        "expanded_cells": 673655,
+        "expanded_units": 61992,
+        "maximum": 17758,
+        "subtypes": {
+          "CD8+ Cycling": {
+            "cells": 48489,
+            "expanded_cells": 36849,
+            "maximum": 17758,
+            "median": 22.0
+          },
+          "CD8+ ILTCK": {
+            "cells": 10693,
+            "expanded_cells": 970,
+            "maximum": 17758,
+            "median": 1.0
+          },
+          "CD8+ Teff": {
+            "cells": 104723,
+            "expanded_cells": 98417,
+            "maximum": 17758,
+            "median": 369.0
+          },
+          "CD8+ Temra": {
+            "cells": 254561,
+            "expanded_cells": 226596,
+            "maximum": 17758,
+            "median": 59.0
+          },
+          "CD8+ Tex": {
+            "cells": 182109,
+            "expanded_cells": 136634,
+            "maximum": 17758,
+            "median": 9.0
+          },
+          "CD8+ Tm": {
+            "cells": 293241,
+            "expanded_cells": 171517,
+            "maximum": 17758,
+            "median": 3.0
+          },
+          "CD8+ Tn": {
+            "cells": 125354,
+            "expanded_cells": 2079,
+            "maximum": 546,
+            "median": 1.0
+          },
+          "CD8+ Tpex": {
+            "cells": 5823,
+            "expanded_cells": 593,
+            "maximum": 1672,
+            "median": 1.0
+          }
+        },
+        "independent_counter_checks": true
+      },
+      "CD4": {
+        "matched": 1142231,
+        "eligible": 1142231,
+        "excluded_identity": 0,
+        "sample_clone_units": 1023903,
+        "expanded_cells": 173971,
+        "expanded_units": 55643,
+        "maximum": 343,
+        "subtypes": {
+          "CD4+ Cycling": {
+            "cells": 18949,
+            "expanded_cells": 7055,
+            "maximum": 343,
+            "median": 1.0
+          },
+          "CD4+ IFNG+ T": {
+            "cells": 54009,
+            "expanded_cells": 27275,
+            "maximum": 322,
+            "median": 2.0
+          },
+          "CD4+ TFH": {
+            "cells": 69954,
+            "expanded_cells": 11964,
+            "maximum": 267,
+            "median": 1.0
+          },
+          "CD4+ Tm": {
+            "cells": 579045,
+            "expanded_cells": 76722,
+            "maximum": 343,
+            "median": 1.0
+          },
+          "CD4+ Tn": {
+            "cells": 234511,
+            "expanded_cells": 3113,
+            "maximum": 71,
+            "median": 1.0
+          },
+          "CD4+ Treg": {
+            "cells": 185763,
+            "expanded_cells": 47842,
+            "maximum": 343,
+            "median": 1.0
+          }
+        },
+        "independent_counter_checks": true
+      }
     }
   }
 }
