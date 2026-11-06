@@ -1,4 +1,5 @@
 import { summarize, percent, subtypeGeneCounts, sortGeneRanks } from './stats.js';
+import { GenePicker } from './gene-picker.js';
 
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('en-US');
@@ -12,6 +13,7 @@ const esc = (text) => String(text).replace(/[&<>"']/g, (c) =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const colorRGB = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 let renderers = [];
+let genePicker, jPicker;
 let framePending = false;
 let resultsPosition = null;
 const mobileLayout = window.matchMedia('(max-width:760px)');
@@ -46,7 +48,7 @@ function updateContext() {
   if (!state.data) return;
   const subtype = state.data.info.subtypes.find(s => s.code === state.rankSubtype);
   const selected = selectionName();
-  const context = `${state.lineage} · ${$('study-select').selectedOptions[0]?.textContent || '全部研究'} · ${state.cohort === 'matched' ? 'RNA–TCR 已匹配' : '全部 RNA 注释'}`;
+  const context = `${state.lineage} · ${$('study-select').selectedOptions[0]?.textContent || '全部研究'} · RNA–TCR 已匹配`;
   $('map-context').textContent = `${context} · ${selected ? `${selected} · ${fmt(state.summary.carrierTotal)} 个高亮细胞` : '选择基因后查看携带细胞'}`;
   $('dock-context').textContent = `${state.direction === 'subtype' ? '亚型排名 · ' + (subtype?.label || '') : '按基因看亚型'} · ${selected || '尚未选择基因'}`;
   $('selection-feedback').hidden = state.direction === 'subtype';
@@ -303,12 +305,12 @@ function applyFilters(reset = false) {
   const subtypeField = state.manifest.attributes.indexOf('cell_subtype_v3');
   const study = state.study === 'all' ? null : Number(state.study);
   let count = 0;
-  for (let i = 0; i < info.cells; i++) if ((state.cohort === 'all' || matched[i]) && (study === null || attrs[i * stride + studyField] === study)) count++;
+  for (let i = 0; i < info.cells; i++) if (matched[i] && (study === null || attrs[i * stride + studyField] === study)) count++;
   const indices = new Uint32Array(count), positions = new Float32Array(count * 2), colors = new Uint8Array(count * 3);
   const palette = state.manifest.codebooks.cell_subtype_v3.map((name) => colorRGB(state.manifest.colors[name] || '#b4bcb0'));
   let offset = 0;
   for (let i = 0; i < info.cells; i++) {
-    if ((state.cohort !== 'all' && !matched[i]) || (study !== null && attrs[i * stride + studyField] !== study)) continue;
+    if (!matched[i] || (study !== null && attrs[i * stride + studyField] !== study)) continue;
     indices[offset] = i; positions[offset * 2] = coords[i * 2]; positions[offset * 2 + 1] = coords[i * 2 + 1];
     const color = palette[attrs[i * stride + subtypeField]];
     colors[offset * 3] = color[0]; colors[offset * 3 + 1] = color[1]; colors[offset * 3 + 2] = color[2]; offset++;
@@ -350,32 +352,26 @@ function countsForLocus(locus, otherLocus = null, otherGene = null) {
   return counts;
 }
 
-function fillGeneOptions(locus, counts, selected, searchId, selectId) {
+function fillGeneOptions(locus, counts, selected, selectId) {
   const book = state.manifest.codebooks[locus];
-  const search = $(searchId).value.trim().toUpperCase();
-  $(searchId).placeholder = `${state.mode === 'pair' ? (locus.endsWith('J') ? '搜索 J 基因' : '搜索 V 基因') : '搜索基因'}，例如 ${locus === 'TRAV' ? 'TRAV1-2' : locus + '1'}`;
-  // Keep the selected gene available even when search text or cohort changes.
   const options = book.map((name, code) => ({ name, code, count: counts[code] }))
-    .filter((g) => g.code >= 2 && (g.name.toUpperCase().includes(search) || g.code === selected));
-  const select = $(selectId);
-  select.innerHTML = `<option value="">${options.length ? '选择一个基因' : '没有匹配的基因'}</option>` + options
-    .map((g) => `<option value="${g.code}">${esc(g.name)} · ${fmt(g.count)}</option>`).join('');
-  select.value = selected === null ? '' : String(selected);
-  const info = $('gene-options-info');
-  if (selectId === 'gene-select') info.textContent = `${state.mode === 'pair' ? 'V 基因' : '基因'}：匹配 ${options.filter(g => g.name.toUpperCase().includes(search)).length} 项；下拉数字为当前队列携带细胞数。`;
-  else info.textContent += ` J 基因：匹配 ${options.filter(g => g.name.toUpperCase().includes(search)).length} 项。`;
+    .filter(g => g.code >= 2 && (g.count > 0 || g.code === selected));
+  (selectId === 'gene-select' ? genePicker : jPicker).update(options, selected, locus);
+  $('gene-options-info').textContent = state.mode === 'pair'
+    ? '先选 V 或 J 均可，另一侧候选按同细胞的实际组合更新。数字为当前配对队列携带细胞数。'
+    : '输入基因名称直接筛选，点击候选或按 Enter 选择。数字为当前配对队列携带细胞数。';
 }
 
 function refreshGeneOptions() {
   const pair = state.mode === 'pair';
   const book = state.manifest.codebooks[state.locus];
   state.geneCounts = countsForLocus(state.locus, pair ? partnerLocus() : null, pair ? state.geneJ : null);
-  fillGeneOptions(state.locus, state.geneCounts, state.gene, 'gene-search', 'gene-select');
+  fillGeneOptions(state.locus, state.geneCounts, state.gene, 'gene-select');
   if (pair) {
     const jBook = state.manifest.codebooks[partnerLocus()];
     const jCounts = countsForLocus(partnerLocus(), state.locus, state.gene);
     state.jCounts = jCounts;
-    fillGeneOptions(partnerLocus(), jCounts, state.geneJ, 'gene-search-j', 'gene-select-j');
+    fillGeneOptions(partnerLocus(), jCounts, state.geneJ, 'gene-select-j');
     const stride = state.manifest.attributes.length;
     const vField = state.manifest.attributes.indexOf(state.locus), jField = state.manifest.attributes.indexOf(partnerLocus());
     const counts = new Map();
@@ -429,7 +425,7 @@ function updateSelection() {
     gene ? (summary.carrierTotal ? '' : `当前队列没有携带该${pair ? '组合' : '基因'}的细胞`) :
       (state.direction === 'subtype' ? '从下方基因排名中选择一项' :
         (pair ? '从下方选择同一条链的 V 和 J 基因' : '从下方选择一个 V/J 基因'));
-  $('distribution-description').textContent = gene ? `${gene} · ${state.lineage} · ${state.cohort === 'matched' ? 'RNA–TCR 已匹配' : '全部 RNA 注释'} · ${fmt(summary.carrierTotal)} 个携带细胞` : '选择基因后查看各亚型的携带率与构成。';
+  $('distribution-description').textContent = gene ? `${gene} · ${state.lineage} · RNA–TCR 已匹配 · ${fmt(summary.carrierTotal)} 个携带细胞` : '选择基因后查看各亚型的携带率与构成。';
   $('call-quality').textContent = `${pair ? state.chain + ' V+J' : state.locus} 有效 ${fmt(summary.validTotal)} · 缺失 ${fmt(summary.missingTotal)} · 不确定 ${fmt(summary.ambiguousTotal)}`;
   $('table-note').textContent = pair
     ? '有效细胞：同一条链的 V、J 两个位点均有明确调用；携带细胞：同时匹配所选 V 和 J。所有比例均基于当前筛选队列；分母为 0 时显示“—”。'
@@ -458,12 +454,13 @@ function updateSelection() {
 
 function chooseGene(code) {
   state.gene = code;
-  $('gene-select').value = code === null ? '' : String(code);
+  genePicker.close(); jPicker.close();
   refreshGeneOptions();
   updateSelection();
 }
 
 function changeLocus(locus) {
+  genePicker.close(); jPicker.close();
   state.locus = locus; state.gene = null; state.geneJ = null; $('gene-search').value = ''; $('gene-search-j').value = '';
   state.rankSearch = ''; $('rank-search').value = ''; state.rankPage = 0;
   document.querySelectorAll('[data-locus]').forEach((b) => {
@@ -508,8 +505,7 @@ function updateExplorationControls() {
   $('j-picker').hidden = inverse || !pair; $('pair-plus').hidden = inverse || !pair;
   $('quick-genes').hidden = inverse;
   $('gene-options-info').hidden = inverse;
-  document.querySelector('label[for="gene-search"]').textContent = pair ? '搜索 V 基因' : '搜索基因';
-  document.querySelector('label[for="gene-select"]').textContent = pair ? '选择 V 基因' : '选择基因';
+  document.querySelector('label[for="gene-search"]').textContent = pair ? '选择 V 基因' : '选择基因';
   $('rank-controls').hidden = !inverse;
   $('ranking-section').hidden = !inverse;
   document.querySelector('.distribution-section').hidden = inverse;
@@ -634,6 +630,12 @@ function showError(error) {
 async function init() {
   const start = performance.now();
   try {
+    genePicker = new GenePicker($('primary-gene-picker'), chooseGene);
+    jPicker = new GenePicker($('j-picker'), code => {
+      state.geneJ = code;
+      genePicker.close();
+      refreshGeneOptions(); updateSelection();
+    });
     renderers = [new UmapRenderer($('reference-canvas'), true), new UmapRenderer($('highlight-canvas'), false)];
     state.manifest = await fetchJSON('/data/manifest.json');
     if (state.manifest.version !== 1) throw new Error('数据版本不兼容，请重新导出数据。');
@@ -656,15 +658,6 @@ async function init() {
     $('rank-prev').addEventListener('click', () => { if (!state.loading && state.rankPage > 0) { state.rankPage--; renderGeneRanking(); } });
     $('rank-next').addEventListener('click', () => { if (!state.loading) { state.rankPage++; renderGeneRanking(); } });
     $('study-select').addEventListener('change', (e) => { state.study = e.target.value; applyFilters(); });
-    $('cohort-select').addEventListener('change', (e) => { state.cohort = e.target.value; applyFilters(); });
-    $('gene-select').addEventListener('change', (e) => chooseGene(e.target.value === '' ? null : Number(e.target.value)));
-    $('gene-select-j').addEventListener('change', (e) => { state.geneJ = e.target.value === '' ? null : Number(e.target.value); refreshGeneOptions(); updateSelection(); });
-    const filterGeneOptions = () => {
-      fillGeneOptions(state.locus, state.geneCounts, state.gene, 'gene-search', 'gene-select');
-      if (state.mode === 'pair') fillGeneOptions(partnerLocus(), state.jCounts, state.geneJ, 'gene-search-j', 'gene-select-j');
-    };
-    $('gene-search').addEventListener('input', filterGeneOptions);
-    $('gene-search-j').addEventListener('input', filterGeneOptions);
     $('quick-genes').addEventListener('click', (e) => { const b = e.target.closest('[data-gene]'); if (b) {
       if (state.mode === 'pair') state.geneJ = Number(b.dataset.geneJ);
       chooseGene(Number(b.dataset.gene));
