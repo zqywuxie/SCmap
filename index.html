@@ -22,7 +22,6 @@
         <div class="cohort-total"><span id="cohort-number">—</span><span>当前队列细胞 <span id="study-count">— 项研究</span></span></div>
       </section>
 
-      <div class="analysis-tabs" aria-label="分析模块"><button type="button" data-analysis="vj" class="active" aria-pressed="true">V/J 亚型偏好</button><button type="button" data-analysis="clone" aria-pressed="false">克隆扩增分布</button></div>
       <div class="toolbar" aria-label="队列筛选">
         <div class="lineage-toggle" aria-label="细胞谱系"><button type="button" class="active" data-lineage="CD8" aria-pressed="true">CD8 <span>T cells</span></button><button type="button" data-lineage="CD4" aria-pressed="false">CD4 <span>T cells</span></button></div>
         <div class="filter-controls">
@@ -33,17 +32,6 @@
       </div>
 
       <div id="notice" role="status" aria-live="polite" class="notice">正在读取真实图谱数据…</div>
-
-      <section id="clone-section" hidden aria-labelledby="clone-heading">
-        <h2 id="clone-heading">各细胞亚型的克隆大小分布</h2>
-        <p class="clone-description">同一研究、受试者、样本和当前谱系内，携带同一作者克隆 ID 的配对细胞计为一个克隆单元。</p>
-        <div class="rank-controls"><label>样本<select id="clone-sample"><option value="all">全部样本</option></select></label><label>分布计数方式<select id="clone-weight"><option value="cells">按细胞计数</option><option value="units">按克隆单元计数</option></select></label><label>曲线平滑程度<select id="clone-bandwidth"><option value="0.1">较细</option><option value="0.18" selected>适中</option><option value="0.3">较平滑</option></select></label></div>
-        <p id="clone-status" role="status" aria-live="polite"></p>
-        <div id="clone-ridges" class="clone-ridges"></div>
-        <p class="table-note">默认每个细胞贡献一次，体现细胞所处克隆的大小。按克隆单元计数时，每个样本内克隆在每个涉及的亚型计一次。曲线在 log₁₀ 空间平滑，各行峰值归一，高度用于比较分布形状。克隆大小 ≥2 定义为观测扩增。</p>
-        <div class="table-wrap"><table><thead><tr><th>细胞亚型</th><th>细胞数</th><th>样本内克隆单元数</th><th>扩增细胞占比</th><th>最大克隆大小</th></tr></thead><tbody id="clone-summary"></tbody></table></div>
-        <p class="table-note">扩增细胞占比 = 此亚型中属于大小 ≥2 克隆的细胞数 ÷ 此亚型可分配克隆的细胞数。克隆大小在整个样本的当前谱系中计算。全部样本为池化描述，分布受采样深度及样本构成影响。</p>
-      </section>
 
       <div class="map-navigation"><h2 id="maps-heading" tabindex="-1">细胞图谱</h2><div class="map-buttons" aria-label="两图联动视角操作"><button type="button" data-view="in" aria-label="放大两图">＋</button><button type="button" data-view="out" aria-label="缩小两图">−</button><button type="button" data-view="left" aria-label="视角向左">←</button><button type="button" data-view="right" aria-label="视角向右">→</button><button type="button" data-view="up" aria-label="视角向上">↑</button><button type="button" data-view="down" aria-label="视角向下">↓</button><button type="button" id="return-results">返回结果 ↓</button></div></div>
       <p id="map-context" class="map-context"></p>
