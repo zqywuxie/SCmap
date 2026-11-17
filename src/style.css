@@ -36,4 +36,33 @@ body{padding-bottom:82px}.app-shell{padding:0 36px}.masthead{height:64px}.intro{
 .picker-options [aria-selected="true"]{background:#e5efdd;font-weight:600}
 .picker-count{font-size:12px;font-weight:400;color:#52665c;font-variant-numeric:tabular-nums;white-space:nowrap}
 .picker-empty{font-size:13px;color:#52665c;padding:10px;line-height:1.8;margin:0}
+
+.patient-evidence {
+  display: block;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #52665c;
+  white-space: normal;
+  margin-top: 4px;
+}
+.patient-evidence strong { color: #284e35; }
+.rank-metric .patient-evidence { text-align: left; }
+.patient-support {
+  padding: 18px 20px;
+  margin: 0 0 20px;
+  background: #eef3e9;
+  border: 1px solid #d3dfcc;
+  border-radius: 5px;
+}
+.patient-support h2 { font-size: 16px; line-height: 1.6; margin: 0; }
+.patient-support p { font-size: 13px; line-height: 1.8; margin: 8px 0; }
+.patient-support .patient-method { font-size: 12px; color: #52665c; }
+.patient-support summary { cursor: pointer; font-size: 13px; padding: 8px 0; }
+.patient-support .table-wrap { margin-top: 10px; max-height: 340px; overflow: auto; background: #f7f8f4; }
+.patient-support th { position: sticky; top: 0; z-index: 1; }
+.patient-composition { white-space: normal; min-width: 280px; line-height: 1.7; }
+.loading .patient-support { opacity: .5; pointer-events: none; }
+@media (max-width: 760px) {
+  .patient-support { padding: 14px; }
+}
 @media(max-width:760px){.filter-controls{grid-template-columns:1fr}.matched-badge{justify-self:start;font-size:12px}.gene-picker.searchable-picker,.pair-mode .gene-picker.searchable-picker{min-width:0;max-width:none;width:100%;flex:0 0 100%}.gene-picker.searchable-picker input{height:44px;font-size:16px}.picker-options{max-height:240px}.picker-options button{padding:10px 8px}.picker-toggle,.picker-clear{width:40px;height:44px}.picker-status{font-size:12px}}

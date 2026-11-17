@@ -27,7 +27,7 @@ export function percent(value) {
 
 /** Count every gene (or same-cell V+J pair) before applying the selected gene. */
 export function subtypeGeneCounts(attrs, indices, stride, subtypeField, subtype,
-  locusField, partnerField = null) {
+  locusField, partnerField = null, patientKeys = null) {
   const counts = new Map();
   let subtypeCells = 0, subtypeValid = 0, subtypeMissing = 0, subtypeAmbiguous = 0, validAll = 0;
   for (const index of indices) {
@@ -41,13 +41,72 @@ export function subtypeGeneCounts(attrs, indices, stride, subtypeField, subtype,
     if (inSubtype) subtypeValid++;
     const key = partnerField === null ? gene : gene * 65536 + partner;
     let row = counts.get(key);
-    if (!row) { row = { gene, partner, carriers: 0, allCarriers: 0 }; counts.set(key, row); }
+    if (!row) {
+      row = { gene, partner, carriers: 0, allCarriers: 0 };
+      if (patientKeys) Object.assign(row, { patientSet: new Set(), patientCounts: new Map(),
+        topPatientCells: 0, unknownPatientCells: 0, allUnknownPatientCells: 0 });
+      counts.set(key, row);
+    }
     row.allCarriers++;
     if (inSubtype) row.carriers++;
+    if (patientKeys) {
+      const patient = patientKeys[index];
+      if (patient) {
+        row.patientSet.add(patient);
+        if (inSubtype) {
+          const count = (row.patientCounts.get(patient) || 0) + 1;
+          row.patientCounts.set(patient, count);
+          row.topPatientCells = Math.max(row.topPatientCells, count);
+        }
+      } else {
+        row.allUnknownPatientCells++;
+        if (inSubtype) row.unknownPatientCells++;
+      }
+    }
   }
-  const rows = [...counts.values()].filter((r) => r.carriers > 0).map((r) => ({ ...r,
-    usage: r.carriers / subtypeValid, subtypeShare: r.carriers / r.allCarriers }));
+  const rows = [...counts.values()].filter((r) => r.carriers > 0).map((r) => {
+    const { patientSet, patientCounts, ...row } = r;
+    if (patientKeys) Object.assign(row, { carrierPatients: patientCounts.size,
+      allCarrierPatients: patientSet.size, topPatientShare: row.topPatientCells / row.carriers });
+    return { ...row, usage: r.carriers / subtypeValid, subtypeShare: r.carriers / r.allCarriers };
+  });
   return { subtypeCells, subtypeValid, subtypeMissing, subtypeAmbiguous, validAll, rows };
+}
+
+/** Patient support for the current gene, preserving its cell-weighted denominators. */
+export function summarizePatients(attrs, indices, stride, subtypeField, locusField,
+  subtypeCount, gene, patientKeys, partnerField = null, partnerGene = null) {
+  const patients = new Map();
+  const subtypePatients = Array.from({ length: subtypeCount }, () => new Map());
+  const carriers = new Uint32Array(subtypeCount);
+  const unknown = new Uint32Array(subtypeCount);
+  for (const index of indices) {
+    const base = index * stride, call = attrs[base + locusField];
+    if (gene === null || call < 2 || call !== gene) continue;
+    if (partnerField !== null && (attrs[base + partnerField] < 2 || attrs[base + partnerField] !== partnerGene)) continue;
+    const subtype = attrs[base + subtypeField], key = patientKeys[index];
+    carriers[subtype]++;
+    if (!key) { unknown[subtype]++; continue; }
+    let patient = patients.get(key);
+    if (!patient) {
+      patient = { key, cells: 0, subtypes: new Uint32Array(subtypeCount) };
+      patients.set(key, patient);
+    }
+    patient.cells++;
+    patient.subtypes[subtype]++;
+    const counts = subtypePatients[subtype];
+    counts.set(key, (counts.get(key) || 0) + 1);
+  }
+  const rows = [...patients.values()].sort((a, b) => b.cells - a.cells || a.key - b.key);
+  const unknownCells = unknown.reduce((sum, n) => sum + n, 0);
+  const bySubtype = subtypePatients.map((counts, subtype) => {
+    let maximum = 0;
+    for (const count of counts.values()) maximum = Math.max(maximum, count);
+    return { carrierPatients: counts.size, allCarrierPatients: rows.length,
+      topPatientCells: maximum, topPatientShare: carriers[subtype] ? maximum / carriers[subtype] : null,
+      unknownPatientCells: unknown[subtype], allUnknownPatientCells: unknownCells };
+  });
+  return { rows, bySubtype, unknownCells };
 }
 
 export function sortGeneRanks(rows, metric = 'usage') {

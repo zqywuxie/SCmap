@@ -69,6 +69,13 @@
         </div>
       </section>
 
+      <section id="patient-support" class="patient-support" aria-labelledby="patient-support-title" hidden>
+        <h2 id="patient-support-title"></h2>
+        <p id="patient-support-description" role="status" aria-live="polite"></p>
+        <p class="patient-method">“携带者亚型占比”按细胞数汇总，同一患者的多个细胞会分别贡献。患者/受试者按“研究来源 + individual”去重，同一研究内合并样本；跨研究的身份分别计数。下方比例旁显示本亚型涉及人数和最大单人细胞贡献。</p>
+        <details><summary id="patient-detail-count">查看患者贡献明细</summary><div class="table-wrap"><table><thead><tr><th scope="col">研究来源</th><th scope="col">患者/受试者标识</th><th scope="col">携带细胞数</th><th scope="col">占全部携带细胞</th><th scope="col">该患者携带细胞的亚型构成</th></tr></thead><tbody id="patient-body"></tbody></table></div></details>
+      </section>
+
       <section class="distribution-section" aria-labelledby="distribution-title">
         <div class="distribution-heading"><div><h2 id="distribution-title">亚型中的基因使用</h2><p id="distribution-description">选择基因后查看各亚型的携带率与构成。</p></div><div class="call-quality" id="call-quality"></div></div>
         <div class="table-wrap">

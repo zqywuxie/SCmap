@@ -1,4 +1,4 @@
-import { summarize, percent, subtypeGeneCounts, sortGeneRanks } from './stats.js';
+import { summarize, percent, subtypeGeneCounts, sortGeneRanks, summarizePatients } from './stats.js';
 import { GenePicker } from './gene-picker.js';
 
 const $ = (id) => document.getElementById(id);
@@ -14,6 +14,36 @@ const esc = (text) => String(text).replace(/[&<>"']/g, (c) =>
 const colorRGB = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 let renderers = [];
 let genePicker, jPicker;
+
+function patientEvidence(support, cells) {
+  const unknown = support.unknownPatientCells;
+  const unknownAll = support.allUnknownPatientCells ?? unknown;
+  const people = support.carrierPatients === 1 && !unknown ? '<strong>仅 1 位</strong>' : `${fmt(support.carrierPatients)} 位`;
+  return `<span class="patient-evidence">本亚型 ${people} / 全部 ${fmt(support.allCarrierPatients)} 位患者/受试者</span>`
+    + `<span class="patient-evidence">最大单人贡献 ${fmt(support.topPatientCells)} / ${fmt(cells)} 细胞（${percent(support.topPatientShare)}）${unknownAll ? ` · 身份缺失：本亚型 ${fmt(unknown)} / 全部 ${fmt(unknownAll)} 个细胞` : ''}</span>`;
+}
+
+function renderPatientSupport() {
+  const selected = selectionName();
+  $('patient-support').hidden = !selected;
+  if (!selected) return;
+  const support = state.patients, total = state.summary.carrierTotal;
+  const maximum = support.rows[0]?.cells || 0;
+  const count = support.rows.length;
+  const origin = support.unknownCells ? `身份明确的携带细胞来自 ${fmt(count)} 位` : count === 1 ? '仅来自 1 位' : `来自 ${fmt(count)} 位`;
+  $('patient-support-title').textContent = `${selected} · ${origin}患者/受试者`;
+  $('patient-support-description').textContent = `共 ${fmt(total)} 个携带细胞，最大单一患者贡献 ${fmt(maximum)} 个（${percent(total ? maximum / total : null)}）。${support.unknownCells ? `另有 ${fmt(support.unknownCells)} 个携带细胞缺失身份，未计入患者人数。` : ''}`;
+  $('patient-detail-count').textContent = `查看患者贡献明细（${fmt(Math.min(count, 20))} / ${fmt(count)} 位，按携带细胞数排序）`;
+  const studies = state.manifest.codebooks.study_name, people = state.manifest.codebooks.individual;
+  $('patient-body').innerHTML = support.rows.slice(0, 20).map(patient => {
+    const identity = patient.key - 1;
+    const study = studies[Math.floor(identity / 65536)], person = people[identity % 65536];
+    const composition = state.data.info.subtypes.filter(s => patient.subtypes[s.code] > 0)
+      .sort((a, b) => patient.subtypes[b.code] - patient.subtypes[a.code])
+      .map(s => `${esc(s.label)} ${fmt(patient.subtypes[s.code])}（${percent(patient.subtypes[s.code] / patient.cells)}）`).join('；');
+    return `<tr><td>${esc(study)}</td><td>${esc(person)}</td><td class="numeric">${fmt(patient.cells)}</td><td class="numeric">${percent(patient.cells / total)}</td><td class="patient-composition">${composition}</td></tr>`;
+  }).join('') || '<tr><td colspan="5">当前选择下没有身份明确的携带患者。</td></tr>';
+}
 let framePending = false;
 let resultsPosition = null;
 const mobileLayout = window.matchMedia('(max-width:760px)');
@@ -272,7 +302,18 @@ async function loadLineage(lineage) {
         loadArray(lineage, info.files.matched, Uint8Array),
         loadArray(lineage, info.files.source_rows, Uint32Array),
       ]);
-      data = { info, coords, attrs, matched, rows };
+      const stride = state.manifest.attributes.length;
+      const studyField = state.manifest.attributes.indexOf('study_name');
+      const personField = state.manifest.attributes.indexOf('individual');
+      const missingIdentity = name => ['', 'nan', 'none', 'na', 'null', 'unknown', '<na>'].includes(String(name).trim().toLowerCase());
+      const studyValid = state.manifest.codebooks.study_name.map(name => !missingIdentity(name));
+      const personValid = state.manifest.codebooks.individual.map(name => !missingIdentity(name));
+      const patientKeys = new Uint32Array(info.cells);
+      for (let i = 0; i < info.cells; i++) {
+        const study = attrs[i * stride + studyField], person = attrs[i * stride + personField];
+        if (studyValid[study] && personValid[person]) patientKeys[i] = study * 65536 + person + 1;
+      }
+      data = { info, coords, attrs, matched, rows, patientKeys };
       state.cache.set(lineage, data);
     }
     if (request !== state.request) return;
@@ -404,6 +445,9 @@ function updateSelection() {
   const summary = summarize(attrs, state.filtered, stride, subtypeField, field,
     state.manifest.codebooks.cell_subtype_v3.length, state.gene, jField, state.geneJ);
   state.summary = summary;
+  state.patients = summarizePatients(attrs, state.filtered, stride, subtypeField, field,
+    state.manifest.codebooks.cell_subtype_v3.length, state.gene, state.data.patientKeys, jField, state.geneJ);
+  renderPatientSupport();
   const highlight = new Float32Array(summary.carrierTotal * 2);
   const highlightColors = new Uint8Array(summary.carrierTotal * 3);
   const palette = state.manifest.codebooks.cell_subtype_v3.map((name) => colorRGB(state.manifest.colors[name] || '#b4bcb0'));
@@ -442,7 +486,7 @@ function updateSelection() {
     return `<tr data-subtype="${s.code}"><td>${gene ? `<span class="table-rank">${rank + 1}</span>` : ''}<span class="legend-dot" style="background:${s.color}"></span>${esc(s.label)}</td>
       <td class="numeric" title="亚型总数 ${fmt(n)}；缺失 ${fmt(summary.missing[s.code])}；不确定 ${fmt(summary.ambiguous[s.code])}">${gene ? fmt(carriers) : '—'} <span>/ ${fmt(valid)}</span></td>
       <td class="rate-cell"><div class="rate-display"><span class="rate-track"><i style="width:${rate === null ? 0 : rate * 100}%"></i></span><span>${percent(rate)}</span></div></td>
-      <td class="composition">${percent(composition)}</td><td class="numeric">${percent(background)}</td></tr>`;
+      <td class="composition">${percent(composition)}${gene ? patientEvidence(state.patients.bySubtype[s.code], carriers) : ''}</td><td class="numeric">${percent(background)}</td></tr>`;
   }).join('');
   document.querySelectorAll('[data-gene]').forEach((b) => b.classList.toggle('active', Number(b.dataset.gene) === state.gene && (!pair || Number(b.dataset.geneJ) === state.geneJ)));
   updateExplorationControls();
@@ -535,7 +579,8 @@ function renderGeneRanking() {
     const start = performance.now();
     state.rankData = subtypeGeneCounts(state.data.attrs, state.filtered, state.manifest.attributes.length,
       state.manifest.attributes.indexOf('cell_subtype_v3'), state.rankSubtype,
-      state.manifest.attributes.indexOf(state.locus), pair ? state.manifest.attributes.indexOf(partnerLocus()) : null);
+      state.manifest.attributes.indexOf(state.locus), pair ? state.manifest.attributes.indexOf(partnerLocus()) : null,
+      state.data.patientKeys);
     state.rankKey = key; state.rankMs = performance.now() - start;
   }
   state.rankRows = sortGeneRanks(state.rankData.rows, state.rankSort).map((r, i) => ({ ...r,
@@ -556,7 +601,7 @@ function renderGeneRanking() {
   $('rank-share-heading').textContent = `携带者亚型占比${state.rankSort === 'subtypeShare' ? ' ↓' : ''}`;
   $('rank-usage-heading').closest('th').setAttribute('aria-sort', state.rankSort === 'usage' ? 'descending' : 'none');
   $('rank-share-heading').closest('th').setAttribute('aria-sort', state.rankSort === 'subtypeShare' ? 'descending' : 'none');
-  const metricCell = (r, metric) => `<td class="rank-metric">${state.rankSort === metric ? `<span class="metric-bar" aria-hidden="true"><i style="width:${r[metric] * 100}%"></i></span>` : ''}<span>${percent(r[metric])}</span></td>`;
+  const metricCell = (r, metric) => `<td class="rank-metric">${state.rankSort === metric ? `<span class="metric-bar" aria-hidden="true"><i style="width:${r[metric] * 100}%"></i></span>` : ''}<span>${percent(r[metric])}</span>${metric === 'subtypeShare' ? patientEvidence(r, r.carriers) : ''}</td>`;
   $('ranking-body').innerHTML = shown.length ? shown.map((r) => {
     const active = state.gene === r.gene && (!pair || state.geneJ === r.partner);
     return `<tr data-rank-gene="${r.gene}"${pair ? ` data-rank-partner="${r.partner}"` : ''} class="${active ? 'selected-rank' : ''}">
@@ -566,7 +611,7 @@ function renderGeneRanking() {
   $('rank-page-info').textContent = filtered.length ? `第 ${state.rankPage + 1} / ${pages} 页 · ${offset + 1}–${offset + shown.length} / ${fmt(filtered.length)} 项${term ? '（保留原排名）' : ''}` : '0 项';
   $('rank-prev').disabled = state.rankPage === 0;
   $('rank-next').disabled = state.rankPage >= pages - 1;
-  $('ranking-note').textContent = `按${state.rankSort === 'usage' ? '亚型内携带率' : '携带者属于该亚型的比例'}降序排列，并列时优先携带细胞数更多者。${pair ? '有效细胞须在同一条链的 V、J 两个位点均有明确调用；仅统计同一细胞同时匹配的组合。' : `有效细胞须有明确的 ${state.locus} 调用。`}仅列出该亚型中实际出现的基因或组合，统计使用当前研究与细胞范围的完整队列，与已高亮基因无关。集中比例须结合细胞数查看；这些为细胞加权描述。`;
+  $('ranking-note').textContent = `按${state.rankSort === 'usage' ? '亚型内携带率' : '携带者属于该亚型的比例'}降序排列，并列时优先携带细胞数更多者。${pair ? '有效细胞须在同一条链的 V、J 两个位点均有明确调用；仅统计同一细胞同时匹配的组合。' : `有效细胞须有明确的 ${state.locus} 调用。`}仅列出该亚型中实际出现的基因或组合，统计使用当前研究与细胞范围的完整队列，与已高亮基因无关。比例按细胞数计算，人数按“研究来源 + individual”去重，同一研究内合并样本。最大单人贡献 = 此亚型中同一患者贡献最多的携带细胞数 ÷ 此亚型携带细胞数。`;
   updateContext();
 }
 
@@ -677,6 +722,9 @@ async function init() {
 
 // Read-only inspection supports count, coordinate, and browser-performance validation.
 window.tcrExplorer = Object.freeze({
+  patients: () => state.patients ? { unknownCells: state.patients.unknownCells,
+    bySubtype: state.patients.bySubtype.map(s => ({ ...s })),
+    rows: state.patients.rows.map(row => ({ ...row, subtypes: Array.from(row.subtypes) })) } : null,
   snapshot: () => ({ lineage: state.lineage, mode: state.mode, chain: state.chain, locus: state.locus, gene: state.gene,
     direction: state.direction, rankSubtype: state.rankSubtype, rankSort: state.rankSort,
     locusJ: state.mode === 'pair' ? partnerLocus() : null, geneJ: state.geneJ,

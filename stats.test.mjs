@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarize, percent, subtypeGeneCounts, sortGeneRanks } from './src/stats.js';
+import { summarize, percent, subtypeGeneCounts, sortGeneRanks, summarizePatients } from './src/stats.js';
 
 test('carrier rates exclude missing and ambiguous calls; composition has its own denominator', () => {
   // subtype, locus: subtype 0 has 2 carriers, 1 other, 1 missing, 1 ambiguous.
@@ -69,4 +69,45 @@ test('subtype pair ranking counts observed same-cell pairs and both-valid denomi
   assert.deepEqual(ranked.map(r=>[r.gene,r.partner,r.carriers,r.allCarriers]),[[2,2,2,3],[2,3,1,1],[3,2,1,2]]);
   assert.equal(ranked[0].usage,0.5); assert.equal(ranked[0].subtypeShare,2/3);
   assert.equal(counts.rows.some(r=>r.gene===3&&r.partner===3),false);
+});
+
+test('patient support deduplicates cells and samples, separates studies, and accounts for unknown identities', () => {
+  // subtype, V, J. Keys encode study*65536 + individual + 1; 0 means missing identity.
+  const attrs = new Uint16Array([0,2,2, 0,2,2, 0,2,2, 1,2,2, 0,2,2, 0,2,3, 0,0,2]);
+  const keys = new Uint32Array([1,1,65537,2,0,3,4]);
+  const indices = Uint32Array.from({ length: 7 }, (_, i) => i);
+  const patients = summarizePatients(attrs, indices, 3, 0, 1, 2, 2, keys, 2, 2);
+  assert.equal(patients.rows.length, 3);
+  assert.equal(patients.rows[0].key, 1);
+  assert.equal(patients.rows[0].cells, 2);
+  assert.equal(patients.unknownCells, 1);
+  assert.deepEqual(patients.bySubtype[0], { carrierPatients: 2, allCarrierPatients: 3,
+    topPatientCells: 2, topPatientShare: 0.5, unknownPatientCells: 1, allUnknownPatientCells: 1 });
+  const rank = subtypeGeneCounts(attrs, indices, 3, 0, 0, 1, 2, keys).rows.find(r => r.gene === 2 && r.partner === 2);
+  assert.equal(rank.carriers, 4);
+  assert.equal(rank.allCarriers, 5);
+  assert.equal(rank.subtypeShare, 0.8);
+  assert.equal(rank.carrierPatients, 2);
+  assert.equal(rank.allCarrierPatients, 3);
+  assert.equal(rank.topPatientShare, 0.5);
+  assert.equal(rank.unknownPatientCells, 1);
+  assert.equal(rank.allUnknownPatientCells, 1);
+  const empty = summarizePatients(attrs, indices, 3, 0, 1, 2, null, keys, 2, 2);
+  assert.equal(empty.rows.length, 0);
+  assert.equal(empty.bySubtype[0].topPatientShare, null);
+});
+
+test('the same cell percentage can have one or several contributing patients', () => {
+  const attrs = new Uint16Array([0,2, 0,2, 0,2, 0,2, 1,2]);
+  const indices = new Uint32Array([0,1,2,3,4]);
+  const one = subtypeGeneCounts(attrs, indices, 2, 0, 0, 1, null, new Uint32Array([1,1,1,1,2])).rows[0];
+  const many = subtypeGeneCounts(attrs, indices, 2, 0, 0, 1, null, new Uint32Array([1,2,3,4,5])).rows[0];
+  assert.equal(one.subtypeShare, many.subtypeShare);
+  assert.equal(one.carrierPatients, 1);
+  assert.equal(one.topPatientShare, 1);
+  assert.equal(many.carrierPatients, 4);
+  assert.equal(many.topPatientShare, 0.25);
+  const subset = summarizePatients(attrs, new Uint32Array([2,3]), 2, 0, 1, 2, 2, new Uint32Array([1,2,3,4,5]));
+  assert.equal(subset.rows.length, 2);
+  assert.equal(subset.bySubtype[0].topPatientShare, 0.5);
 });
