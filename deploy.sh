@@ -84,7 +84,7 @@ docker run --rm --entrypoint nginx "$IMAGE" -t
 docker run -d --name "$CANDIDATE" --label "org.scmap.app=$APP_NAME" -p 127.0.0.1::80 "$IMAGE" >/dev/null
 TEST_PORT="$(docker port "$CANDIDATE" 80/tcp)"; TEST_PORT="${TEST_PORT##*:}"
 wait_http "http://127.0.0.1:$TEST_PORT/healthz"
-wait_http "http://127.0.0.1:$TEST_PORT/data/manifest.json" >/dev/null
+wait_http "http://127.0.0.1:$TEST_PORT/data/datasets.json" >/dev/null
 docker rm -f "$CANDIDATE" >/dev/null
 if exists "$BACKUP"; then docker rm "$BACKUP" >/dev/null; fi
 if exists "$APP_NAME"; then

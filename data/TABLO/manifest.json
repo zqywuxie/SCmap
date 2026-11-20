@@ -1,0 +1,958 @@
+{
+  "version": 1,
+  "dataset_id": "tablo",
+  "dataset_name": "TABLO · Sureshchandra 2025",
+  "generated_at": "2026-11-20T03:40:32.243261+00:00",
+  "coordinate_source": "Author RNA obsm/X_umap; float64 converted to float32 for WebGL; no refitting",
+  "coordinate_max_abs_error": 3.488066973034165e-07,
+  "annotation_source": "Author annotation_L3",
+  "pairing_source": "CSV-verified analysis_pair; one TRB and one/two TRA; representative chain only",
+  "patient_identity": "study_name + canonical donor; Blood and Tonsil share the same donor",
+  "display_notes": "作者 L3 注释与原始 RNA UMAP；仅展示 CSV 核对通过的双链细胞。双 α 细胞按 UMI、reads 选主要 α 链；Blood/Tonsil 合并统计同一供者。",
+  "sources": [
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/summary.json",
+      "bytes": 32086,
+      "mtime_ns": 1795144376850831884
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/independent_validation.json",
+      "bytes": 4928,
+      "mtime_ns": 1795143690170935043
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor10_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 424525939,
+      "mtime_ns": 1795144239022311322
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor10_Blood.parquet",
+      "bytes": 4432018,
+      "mtime_ns": 1795142622334060546
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor10_Blood.parquet",
+      "bytes": 1538620,
+      "mtime_ns": 1795142622375061141
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor10_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2933803262,
+      "mtime_ns": 1795144239023311333
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor10_Tonsil.parquet",
+      "bytes": 29437405,
+      "mtime_ns": 1795142655764544594
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor10_Tonsil.parquet",
+      "bytes": 4166517,
+      "mtime_ns": 1795142655867546083
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor1_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 1851872474,
+      "mtime_ns": 1795144239024311343
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor1_Blood.parquet",
+      "bytes": 11440019,
+      "mtime_ns": 1795142678077867039
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor1_Blood.parquet",
+      "bytes": 12495942,
+      "mtime_ns": 1795142678292870144
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor1_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 1476785059,
+      "mtime_ns": 1795144239025311355
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor1_Tonsil.parquet",
+      "bytes": 13794286,
+      "mtime_ns": 1795142695309115713
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor1_Tonsil.parquet",
+      "bytes": 3588257,
+      "mtime_ns": 1795142695381116751
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor2_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 1005591544,
+      "mtime_ns": 1795144239026311365
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor2_Blood.parquet",
+      "bytes": 9250652,
+      "mtime_ns": 1795142707816296036
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor2_Blood.parquet",
+      "bytes": 4915430,
+      "mtime_ns": 1795142707910297391
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor2_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2344416362,
+      "mtime_ns": 1795144239026311365
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor2_Tonsil.parquet",
+      "bytes": 22977287,
+      "mtime_ns": 1795142733164661063
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor2_Tonsil.parquet",
+      "bytes": 2046555,
+      "mtime_ns": 1795142733218661840
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor3_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 3259780245,
+      "mtime_ns": 1795144239027311376
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor3_Blood.parquet",
+      "bytes": 23728836,
+      "mtime_ns": 1795142773991247819
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor3_Blood.parquet",
+      "bytes": 17844798,
+      "mtime_ns": 1795142774313252441
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor3_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 1430204910,
+      "mtime_ns": 1795144239028311387
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor3_Tonsil.parquet",
+      "bytes": 12493086,
+      "mtime_ns": 1795142790243481015
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor3_Tonsil.parquet",
+      "bytes": 3779725,
+      "mtime_ns": 1795142790328482234
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor4_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 1056536212,
+      "mtime_ns": 1795144239029311398
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor4_Blood.parquet",
+      "bytes": 9299561,
+      "mtime_ns": 1795142802590658042
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor4_Blood.parquet",
+      "bytes": 4135655,
+      "mtime_ns": 1795142802676659275
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor4_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 3273186615,
+      "mtime_ns": 1795144239029311398
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor4_Tonsil.parquet",
+      "bytes": 33124911,
+      "mtime_ns": 1795142839055180184
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor4_Tonsil.parquet",
+      "bytes": 3470462,
+      "mtime_ns": 1795142839140181400
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor5_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 407411238,
+      "mtime_ns": 1795144239030311409
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor5_Blood.parquet",
+      "bytes": 3309746,
+      "mtime_ns": 1795142843856248860
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor5_Blood.parquet",
+      "bytes": 1872454,
+      "mtime_ns": 1795142843902249518
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor5_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2019742722,
+      "mtime_ns": 1795144239031311420
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor5_Tonsil.parquet",
+      "bytes": 19869309,
+      "mtime_ns": 1795142865964564897
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor5_Tonsil.parquet",
+      "bytes": 3642073,
+      "mtime_ns": 1795142866044566040
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor6_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 343840401,
+      "mtime_ns": 1795144239031311420
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor6_Blood.parquet",
+      "bytes": 3319641,
+      "mtime_ns": 1795142870165624914
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor6_Blood.parquet",
+      "bytes": 1405342,
+      "mtime_ns": 1795142870203625456
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor6_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2979628711,
+      "mtime_ns": 1795144239032311430
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor6_Tonsil.parquet",
+      "bytes": 30954418,
+      "mtime_ns": 1795142904246111362
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor6_Tonsil.parquet",
+      "bytes": 4111976,
+      "mtime_ns": 1795142904341112717
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor7_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 1998330950,
+      "mtime_ns": 1795144239033311441
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor7_Blood.parquet",
+      "bytes": 17450960,
+      "mtime_ns": 1795143033029943404
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor7_Blood.parquet",
+      "bytes": 8424513,
+      "mtime_ns": 1795143033190945689
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor7_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2493335063,
+      "mtime_ns": 1795144239034311452
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor7_Tonsil.parquet",
+      "bytes": 24285392,
+      "mtime_ns": 1795143062129134852
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor7_Tonsil.parquet",
+      "bytes": 5118815,
+      "mtime_ns": 1795143062246134706
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor8_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 219480425,
+      "mtime_ns": 1795144239034311452
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor8_Blood.parquet",
+      "bytes": 2853276,
+      "mtime_ns": 1795142587540555479
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor8_Blood.parquet",
+      "bytes": 1092768,
+      "mtime_ns": 1795142587574555973
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor8_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 1866983790,
+      "mtime_ns": 1795144239035311463
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor8_Tonsil.parquet",
+      "bytes": 17118118,
+      "mtime_ns": 1795143081802115212
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor8_Tonsil.parquet",
+      "bytes": 3089468,
+      "mtime_ns": 1795143081875115157
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor9_Blood_GEX_TCR_corrected.h5ad",
+      "bytes": 2461189194,
+      "mtime_ns": 1795144239036311474
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor9_Blood.parquet",
+      "bytes": 23409181,
+      "mtime_ns": 1795143112277104018
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor9_Blood.parquet",
+      "bytes": 8397825,
+      "mtime_ns": 1795143112431104020
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor9_Tonsil_GEX_TCR_corrected.h5ad",
+      "bytes": 2775979363,
+      "mtime_ns": 1795144239036311474
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD4/Donor9_Tonsil.parquet",
+      "bytes": 28909994,
+      "mtime_ns": 1795143144096115976
+    },
+    {
+      "path": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/pairs/CD8/Donor9_Tonsil.parquet",
+      "bytes": 3135014,
+      "mtime_ns": 1795143144174116035
+    }
+  ],
+  "samples": [
+    {
+      "sample": "Donor10_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor10_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 0,
+      "rna_cells": 54057
+    },
+    {
+      "sample": "Donor10_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor10_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 54057,
+      "rna_cells": 344276
+    },
+    {
+      "sample": "Donor1_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor1_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 398333,
+      "rna_cells": 231453
+    },
+    {
+      "sample": "Donor1_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor1_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 629786,
+      "rna_cells": 175170
+    },
+    {
+      "sample": "Donor2_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor2_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 804956,
+      "rna_cells": 132820
+    },
+    {
+      "sample": "Donor2_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor2_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 937776,
+      "rna_cells": 264876
+    },
+    {
+      "sample": "Donor3_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor3_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 1202652,
+      "rna_cells": 417899
+    },
+    {
+      "sample": "Donor3_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor3_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 1620551,
+      "rna_cells": 166933
+    },
+    {
+      "sample": "Donor4_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor4_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 1787484,
+      "rna_cells": 130320
+    },
+    {
+      "sample": "Donor4_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor4_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 1917804,
+      "rna_cells": 373922
+    },
+    {
+      "sample": "Donor5_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor5_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 2291726,
+      "rna_cells": 47837
+    },
+    {
+      "sample": "Donor5_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor5_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 2339563,
+      "rna_cells": 230895
+    },
+    {
+      "sample": "Donor6_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor6_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 2570458,
+      "rna_cells": 42266
+    },
+    {
+      "sample": "Donor6_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor6_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 2612724,
+      "rna_cells": 351815
+    },
+    {
+      "sample": "Donor7_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor7_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 2964539,
+      "rna_cells": 265524
+    },
+    {
+      "sample": "Donor7_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor7_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 3230063,
+      "rna_cells": 303343
+    },
+    {
+      "sample": "Donor8_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor8_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 3533406,
+      "rna_cells": 36713
+    },
+    {
+      "sample": "Donor8_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor8_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 3570119,
+      "rna_cells": 203282
+    },
+    {
+      "sample": "Donor9_Blood",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor9_Blood_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 3773401,
+      "rna_cells": 317808
+    },
+    {
+      "sample": "Donor9_Tonsil",
+      "source_h5ad": "/colddata/zqy/TCRCellNet/data/TABLO_Sureshchandra_2025/processed/reorganized_v1/h5ad/Donor9_Tonsil_GEX_TCR_corrected.h5ad",
+      "global_row_offset": 4091209,
+      "rna_cells": 325068
+    }
+  ],
+  "matching": {
+    "rna_cells": 4416277,
+    "matched_cells": 4193343,
+    "browser_cells": 4089157,
+    "omitted_other_lineages": 104186
+  },
+  "attributes": [
+    "cell_subtype_v3",
+    "study_name",
+    "sample_name",
+    "individual",
+    "tissue",
+    "TRAV",
+    "TRAJ",
+    "TRBV",
+    "TRBJ"
+  ],
+  "loci": [
+    "TRAV",
+    "TRAJ",
+    "TRBV",
+    "TRBJ"
+  ],
+  "codebooks": {
+    "cell_subtype_v3": [
+      "CD4-Naive",
+      "CD4-TCM",
+      "CD4-TEM",
+      "Tregs",
+      "TFH",
+      "GC-TFH",
+      "CD8-Naive",
+      "CD8-TCM",
+      "CD8-TEM",
+      "CD8-TRM"
+    ],
+    "study_name": [
+      "TABLO_Sureshchandra_2025"
+    ],
+    "sample_name": [
+      "Donor10_Blood",
+      "Donor10_Tonsil",
+      "Donor1_Blood",
+      "Donor1_Tonsil",
+      "Donor2_Blood",
+      "Donor2_Tonsil",
+      "Donor3_Blood",
+      "Donor3_Tonsil",
+      "Donor4_Blood",
+      "Donor4_Tonsil",
+      "Donor5_Blood",
+      "Donor5_Tonsil",
+      "Donor6_Blood",
+      "Donor6_Tonsil",
+      "Donor7_Blood",
+      "Donor7_Tonsil",
+      "Donor8_Blood",
+      "Donor8_Tonsil",
+      "Donor9_Blood",
+      "Donor9_Tonsil"
+    ],
+    "individual": [
+      "CHOC008",
+      "CHOC015",
+      "CHOC016",
+      "CHOC034",
+      "CHOC039",
+      "CHOC066",
+      "UCIMC001",
+      "UCIMC004",
+      "UCIMC016",
+      "UCIMC018"
+    ],
+    "tissue": [
+      "Blood",
+      "Tonsil"
+    ],
+    "TRAV": [
+      "缺失",
+      "不确定调用",
+      "TRAV1-1",
+      "TRAV1-2",
+      "TRAV10",
+      "TRAV12-1",
+      "TRAV12-2",
+      "TRAV12-3",
+      "TRAV13-1",
+      "TRAV13-2",
+      "TRAV14/DV4",
+      "TRAV16",
+      "TRAV17",
+      "TRAV18",
+      "TRAV19",
+      "TRAV2",
+      "TRAV20",
+      "TRAV21",
+      "TRAV22",
+      "TRAV23/DV6",
+      "TRAV24",
+      "TRAV25",
+      "TRAV26-1",
+      "TRAV26-2",
+      "TRAV27",
+      "TRAV29/DV5",
+      "TRAV3",
+      "TRAV30",
+      "TRAV34",
+      "TRAV35",
+      "TRAV36/DV7",
+      "TRAV38-1",
+      "TRAV38-2/DV8",
+      "TRAV39",
+      "TRAV4",
+      "TRAV40",
+      "TRAV41",
+      "TRAV5",
+      "TRAV6",
+      "TRAV7",
+      "TRAV8-1",
+      "TRAV8-2",
+      "TRAV8-3",
+      "TRAV8-4",
+      "TRAV8-6",
+      "TRAV9-1",
+      "TRAV9-2"
+    ],
+    "TRAJ": [
+      "缺失",
+      "不确定调用",
+      "TRAJ10",
+      "TRAJ11",
+      "TRAJ12",
+      "TRAJ13",
+      "TRAJ14",
+      "TRAJ15",
+      "TRAJ16",
+      "TRAJ17",
+      "TRAJ18",
+      "TRAJ2",
+      "TRAJ20",
+      "TRAJ21",
+      "TRAJ22",
+      "TRAJ23",
+      "TRAJ24",
+      "TRAJ25",
+      "TRAJ26",
+      "TRAJ27",
+      "TRAJ28",
+      "TRAJ29",
+      "TRAJ3",
+      "TRAJ30",
+      "TRAJ31",
+      "TRAJ32",
+      "TRAJ33",
+      "TRAJ34",
+      "TRAJ35",
+      "TRAJ36",
+      "TRAJ37",
+      "TRAJ38",
+      "TRAJ39",
+      "TRAJ4",
+      "TRAJ40",
+      "TRAJ41",
+      "TRAJ42",
+      "TRAJ43",
+      "TRAJ44",
+      "TRAJ45",
+      "TRAJ46",
+      "TRAJ47",
+      "TRAJ48",
+      "TRAJ49",
+      "TRAJ5",
+      "TRAJ50",
+      "TRAJ52",
+      "TRAJ53",
+      "TRAJ54",
+      "TRAJ56",
+      "TRAJ57",
+      "TRAJ58",
+      "TRAJ6",
+      "TRAJ61",
+      "TRAJ7",
+      "TRAJ8",
+      "TRAJ9"
+    ],
+    "TRBV": [
+      "缺失",
+      "不确定调用",
+      "TRBV10-1",
+      "TRBV10-2",
+      "TRBV10-3",
+      "TRBV11-1",
+      "TRBV11-2",
+      "TRBV11-3",
+      "TRBV12-3",
+      "TRBV12-4",
+      "TRBV12-5",
+      "TRBV13",
+      "TRBV14",
+      "TRBV15",
+      "TRBV16",
+      "TRBV18",
+      "TRBV19",
+      "TRBV2",
+      "TRBV20-1",
+      "TRBV24-1",
+      "TRBV25-1",
+      "TRBV27",
+      "TRBV28",
+      "TRBV29-1",
+      "TRBV3-1",
+      "TRBV30",
+      "TRBV4-1",
+      "TRBV4-2",
+      "TRBV4-3",
+      "TRBV5-1",
+      "TRBV5-3",
+      "TRBV5-4",
+      "TRBV5-5",
+      "TRBV5-6",
+      "TRBV5-7",
+      "TRBV5-8",
+      "TRBV6-1",
+      "TRBV6-2",
+      "TRBV6-4",
+      "TRBV6-5",
+      "TRBV6-6",
+      "TRBV6-7",
+      "TRBV6-8",
+      "TRBV6-9",
+      "TRBV7-2",
+      "TRBV7-3",
+      "TRBV7-4",
+      "TRBV7-6",
+      "TRBV7-7",
+      "TRBV7-8",
+      "TRBV7-9",
+      "TRBV9"
+    ],
+    "TRBJ": [
+      "缺失",
+      "不确定调用",
+      "TRBJ1-1",
+      "TRBJ1-2",
+      "TRBJ1-3",
+      "TRBJ1-4",
+      "TRBJ1-5",
+      "TRBJ1-6",
+      "TRBJ2-1",
+      "TRBJ2-2",
+      "TRBJ2-3",
+      "TRBJ2-4",
+      "TRBJ2-5",
+      "TRBJ2-6",
+      "TRBJ2-7"
+    ]
+  },
+  "colors": {
+    "CD4-Naive": "#527fa4",
+    "CD4-TCM": "#609c87",
+    "CD4-TEM": "#cd9250",
+    "Tregs": "#9776ae",
+    "TFH": "#bf718f",
+    "GC-TFH": "#a6a04e",
+    "CD8-Naive": "#527fa4",
+    "CD8-TCM": "#609c87",
+    "CD8-TEM": "#cd9250",
+    "CD8-TRM": "#bd6862"
+  },
+  "missing_code": 0,
+  "ambiguous_code": 1,
+  "valid_gene_min_code": 2,
+  "display_sampling": false,
+  "paired_only": true,
+  "lineages": {
+    "CD4": {
+      "cells": 3187038,
+      "matched": 3187038,
+      "bounds": [
+        -10.951083183288574,
+        -9.304950714111328,
+        12.978092193603516,
+        7.256009578704834
+      ],
+      "files": {
+        "coords": {
+          "path": "coords.f32.gz",
+          "dtype": "<f4",
+          "shape": [
+            3187038,
+            2
+          ],
+          "bytes": 25496304,
+          "compressed_bytes": 23408516,
+          "sha256": "a53db11195f4d0308b63967276950bf3d44110efa435af7a50e40bad84b2af9b"
+        },
+        "attributes": {
+          "path": "attributes.u16.gz",
+          "dtype": "<u2",
+          "shape": [
+            3187038,
+            9
+          ],
+          "bytes": 57366684,
+          "compressed_bytes": 14623250,
+          "sha256": "d68b03290e104731e64a40d5bce69dbe6e30a702ca7b26100e30e8e316691947"
+        },
+        "matched": {
+          "path": "matched.u8.gz",
+          "dtype": "|u1",
+          "shape": [
+            3187038
+          ],
+          "bytes": 3187038,
+          "compressed_bytes": 3123,
+          "sha256": "e69ecb69d9c2fe70b06890d7c5dad48ef9c194ec94a824f383cc9353e6753a56"
+        },
+        "source_rows": {
+          "path": "source_rows.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            3187038
+          ],
+          "bytes": 12748152,
+          "compressed_bytes": 4418243,
+          "sha256": "be8e1d452206802ac5acc6755cac494bd98d1349a6cf5bf95e948e08fd9e3e7f"
+        }
+      },
+      "subtypes": [
+        {
+          "label": "CD4-Naive",
+          "code": 0,
+          "color": "#527fa4",
+          "cells": 1109983,
+          "matched": 1109983,
+          "label_position": [
+            -4.023857116699219,
+            3.6050312519073486
+          ]
+        },
+        {
+          "label": "CD4-TCM",
+          "code": 1,
+          "color": "#609c87",
+          "cells": 836917,
+          "matched": 836917,
+          "label_position": [
+            4.199129104614258,
+            1.7293720245361328
+          ]
+        },
+        {
+          "label": "CD4-TEM",
+          "code": 2,
+          "color": "#cd9250",
+          "cells": 319898,
+          "matched": 319898,
+          "label_position": [
+            -0.698819637298584,
+            -1.4731004238128662
+          ]
+        },
+        {
+          "label": "Tregs",
+          "code": 3,
+          "color": "#9776ae",
+          "cells": 289997,
+          "matched": 289997,
+          "label_position": [
+            5.5817365646362305,
+            -2.0193662643432617
+          ]
+        },
+        {
+          "label": "TFH",
+          "code": 4,
+          "color": "#bf718f",
+          "cells": 600339,
+          "matched": 600339,
+          "label_position": [
+            9.563695907592773,
+            1.455235242843628
+          ]
+        },
+        {
+          "label": "GC-TFH",
+          "code": 5,
+          "color": "#a6a04e",
+          "cells": 29904,
+          "matched": 29904,
+          "label_position": [
+            11.389636993408203,
+            -0.9673974514007568
+          ]
+        }
+      ],
+      "cell_id_sha256": "9e3171e4d141ae0ef3c04f346ab8ebae38b95e63737624c7cddd679c47015f8e",
+      "tissues": {
+        "Tonsil": 2202636,
+        "Blood": 984402
+      },
+      "donors": 10,
+      "dual_alpha_cells": 330097
+    },
+    "CD8": {
+      "cells": 902119,
+      "matched": 902119,
+      "bounds": [
+        -11.013957977294922,
+        -11.63973331451416,
+        10.060786247253418,
+        7.177196979522705
+      ],
+      "files": {
+        "coords": {
+          "path": "coords.f32.gz",
+          "dtype": "<f4",
+          "shape": [
+            902119,
+            2
+          ],
+          "bytes": 7216952,
+          "compressed_bytes": 6610495,
+          "sha256": "fd8cad74ff3eab1015da41408ad666555c8179340eb301f5368e900de938a9ab"
+        },
+        "attributes": {
+          "path": "attributes.u16.gz",
+          "dtype": "<u2",
+          "shape": [
+            902119,
+            9
+          ],
+          "bytes": 16238142,
+          "compressed_bytes": 3729973,
+          "sha256": "42c1eea916d7cb5246df63ffd11b75c00a11d21204dd06b7cc98a5d8647440d1"
+        },
+        "matched": {
+          "path": "matched.u8.gz",
+          "dtype": "|u1",
+          "shape": [
+            902119
+          ],
+          "bytes": 902119,
+          "compressed_bytes": 910,
+          "sha256": "ba8e64b6960553c52e6e5d8a1b32561bba90e6efe81bc7f123e2d85031bb5e03"
+        },
+        "source_rows": {
+          "path": "source_rows.u32.gz",
+          "dtype": "<u4",
+          "shape": [
+            902119
+          ],
+          "bytes": 3608476,
+          "compressed_bytes": 1272033,
+          "sha256": "bcee20ac527ba8f783205e08f0daccf8a3405bf9c28572a34623819bd82f5d05"
+        }
+      },
+      "subtypes": [
+        {
+          "label": "CD8-Naive",
+          "code": 6,
+          "color": "#527fa4",
+          "cells": 528111,
+          "matched": 528111,
+          "label_position": [
+            -8.256667137145996,
+            -0.022086063399910927
+          ]
+        },
+        {
+          "label": "CD8-TCM",
+          "code": 7,
+          "color": "#609c87",
+          "cells": 145583,
+          "matched": 145583,
+          "label_position": [
+            -2.843066453933716,
+            -4.915729999542236
+          ]
+        },
+        {
+          "label": "CD8-TEM",
+          "code": 8,
+          "color": "#cd9250",
+          "cells": 101937,
+          "matched": 101937,
+          "label_position": [
+            -2.9673268795013428,
+            -9.720988273620605
+          ]
+        },
+        {
+          "label": "CD8-TRM",
+          "code": 9,
+          "color": "#bd6862",
+          "cells": 126488,
+          "matched": 126488,
+          "label_position": [
+            -0.3053703308105469,
+            -8.161788940429688
+          ]
+        }
+      ],
+      "cell_id_sha256": "19f6dd0b33a3258877b616742d43e6a8bfb8087125e0783f8b233a8d06605e9c",
+      "tissues": {
+        "Blood": 566887,
+        "Tonsil": 335232
+      },
+      "donors": 10,
+      "dual_alpha_cells": 89601
+    }
+  }
+}

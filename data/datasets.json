@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "default": "pan-disease",
+  "datasets": [
+    { "id": "pan-disease", "label": "Pan-disease", "manifest": "manifest.json" },
+    { "id": "tablo", "label": "TABLO · Sureshchandra 2025", "manifest": "TABLO/manifest.json" }
+  ]
+}

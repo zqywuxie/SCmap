@@ -4,8 +4,9 @@ import { GenePicker } from './gene-picker.js';
 const $ = (id) => document.getElementById(id);
 const nf = new Intl.NumberFormat('en-US');
 const fmt = (n) => nf.format(n);
-const state = { manifest: null, data: null, lineage: 'CD8', mode: 'single', chain: 'TRA', locus: 'TRAV', gene: null, geneJ: null,
-  study: 'all', cohort: 'matched', filtered: new Uint32Array(), summary: null,
+const state = { manifest: null, data: null, dataset: null, datasetInfo: null, catalog: null, dataBase: null,
+  lineage: 'CD8', mode: 'single', chain: 'TRA', locus: 'TRAV', gene: null, geneJ: null,
+  study: 'all', tissue: 'all', cohort: 'matched', filtered: new Uint32Array(), summary: null,
   direction: 'gene', rankSubtype: null, rankSort: 'usage', rankSearch: '', rankPage: 0,
   rankKey: null, rankData: null, rankRows: [], rankPageSize: 25,
   cache: new Map(), request: 0, view: null, baseScale: 1, grid: null, loading: false };
@@ -78,9 +79,11 @@ function updateContext() {
   if (!state.data) return;
   const subtype = state.data.info.subtypes.find(s => s.code === state.rankSubtype);
   const selected = selectionName();
-  const context = `${state.lineage} · ${$('study-select').selectedOptions[0]?.textContent || '全部研究'} · RNA–TCR 已匹配`;
+  const cohort = $('tissue-filter').hidden ? $('study-select').selectedOptions[0]?.textContent || '全部研究'
+    : $('tissue-select').selectedOptions[0]?.textContent || 'Blood + Tonsil';
+  const context = `${state.datasetInfo.label} · ${state.lineage} · ${cohort} · RNA–TCR 已匹配`;
   $('map-context').textContent = `${context} · ${selected ? `${selected} · ${fmt(state.summary.carrierTotal)} 个高亮细胞` : '选择基因后查看携带细胞'}`;
-  $('dock-context').textContent = `${state.direction === 'subtype' ? '亚型排名 · ' + (subtype?.label || '') : '按基因看亚型'} · ${selected || '尚未选择基因'}`;
+  $('dock-context').textContent = `${state.datasetInfo.label} · ${state.lineage} · ${state.direction === 'subtype' ? '亚型排名 · ' + (subtype?.label || '') : '按基因看亚型'} · ${selected || '尚未选择基因'}`;
   $('selection-feedback').hidden = state.direction === 'subtype';
   $('selection-feedback').innerHTML = `<span>${selected ? `已选 ${esc(selected)} · 全队列高亮 ${fmt(state.summary.carrierTotal)} 个携带细胞` : state.mode === 'pair' ? '选择同一条链的 V 和 J 基因后，显示组合携带细胞。' : '搜索或从常见基因中选择，查看各亚型的分布。'}</span><button type="button" data-jump="maps">查看 UMAP ↑</button>`;
   document.querySelectorAll('.legend-item').forEach(el => el.classList.toggle('legend-selected', state.direction === 'subtype' && Number(el.dataset.code) === state.rankSubtype));
@@ -269,8 +272,8 @@ async function fetchJSON(path) {
   return response.json();
 }
 
-async function loadArray(lineage, descriptor, Type) {
-  const response = await fetch(`/data/${lineage}/${descriptor.path}`);
+async function loadArray(base, lineage, descriptor, Type) {
+  const response = await fetch(new URL(`${lineage}/${descriptor.path}`, base));
   if (!response.ok) throw new Error(`数据读取失败 (${response.status})：${descriptor.path}`);
   if (!('DecompressionStream' in window)) throw new Error('请使用支持 gzip 解压的新版 Chrome、Edge、Firefox 或 Safari。');
   const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
@@ -284,6 +287,54 @@ async function loadArray(lineage, descriptor, Type) {
   return new Type(buffer);
 }
 
+async function loadDataset(id) {
+  const dataset = state.catalog.datasets.find(item => item.id === id);
+  if (!dataset) throw new Error('找不到所选数据集。');
+  const request = ++state.request;
+  state.loading = true;
+  document.body.classList.add('loading');
+  setControlsDisabled(true);
+  $('notice').dataset.ready = 'false'; $('notice').classList.remove('error');
+  $('notice').textContent = `正在读取 ${dataset.label}…`;
+  try {
+    const url = new URL(dataset.manifest, new URL('/data/', location.href));
+    const manifest = await fetchJSON(url);
+    if (request !== state.request) return;
+    if (manifest.version !== 1) throw new Error('数据版本不兼容，请重新导出数据。');
+    state.dataset = id; state.datasetInfo = dataset; state.manifest = manifest;
+    state.dataBase = new URL('.', url);
+    state.cache.clear();
+    state.data = null; state.summary = null; state.view = null;
+    state.gene = null; state.geneJ = null; state.rankSubtype = null;
+    state.rankData = null; state.rankRows = []; state.rankKey = null;
+    state.rankSearch = ''; $('rank-search').value = '';
+    state.study = 'all'; state.tissue = 'all';
+    genePicker.close(); jPicker.close();
+    $('gene-search').value = ''; $('gene-search-j').value = '';
+    $('dataset-select').value = id;
+    $('dataset-tag').textContent = `${dataset.label} · Human T cells`;
+    $('dataset-description').textContent = manifest.display_notes || '作者 RNA 亚型与原始 UMAP；按发布的 TCR 克隆键匹配，未额外进行 productive / UMI 质控。';
+    $('study-select').innerHTML = '<option value="all">全部研究</option>' + manifest.codebooks.study_name
+      .map((name, code) => `<option value="${code}">${esc(name)}</option>`).join('');
+    const tissues = manifest.codebooks.tissue;
+    $('study-filter').hidden = manifest.codebooks.study_name.length === 1;
+    $('tissue-filter').hidden = !tissues;
+    $('tissue-select').innerHTML = '<option value="all">Blood + Tonsil</option>' + (tissues || [])
+      .map((name, code) => `<option value="${code}">${esc(name)}</option>`).join('');
+    document.querySelector('.patient-method').textContent = tissues
+      ? '供者按统一 donor 标识去重，同一供者的 Blood/Tonsil 合并统计。人数及最大单人贡献均随组织筛选更新；比例按细胞数计算。'
+      : '患者身份按研究来源 + 个体标识去重；同一研究内合并多个样本，跨研究分别统计。身份缺失细胞单独记录；比例按细胞数计算。';
+    await loadLineage(state.lineage);
+  } catch (error) {
+    if (request === state.request) {
+      $('dataset-select').value = state.dataset || '';
+      showError(error);
+    }
+  } finally {
+    if (request === state.request) { state.loading = false; document.body.classList.remove('loading'); setControlsDisabled(false); }
+  }
+}
+
 async function loadLineage(lineage) {
   const request = ++state.request;
   state.loading = true;
@@ -293,28 +344,30 @@ async function loadLineage(lineage) {
   $('notice').dataset.ready = 'false'; $('notice').classList.remove('error');
   $('notice').textContent = `正在加载 ${lineage} 的完整细胞坐标与 V/J 注释…`;
   try {
-    let data = state.cache.get(lineage);
+    const cacheKey = `${state.dataset}:${lineage}`, manifest = state.manifest, base = state.dataBase;
+    let data = state.cache.get(cacheKey);
     if (!data) {
-      const info = state.manifest.lineages[lineage];
+      const info = manifest.lineages[lineage];
       const [coords, attrs, matched, rows] = await Promise.all([
-        loadArray(lineage, info.files.coords, Float32Array),
-        loadArray(lineage, info.files.attributes, Uint16Array),
-        loadArray(lineage, info.files.matched, Uint8Array),
-        loadArray(lineage, info.files.source_rows, Uint32Array),
+        loadArray(base, lineage, info.files.coords, Float32Array),
+        loadArray(base, lineage, info.files.attributes, Uint16Array),
+        loadArray(base, lineage, info.files.matched, Uint8Array),
+        loadArray(base, lineage, info.files.source_rows, Uint32Array),
       ]);
-      const stride = state.manifest.attributes.length;
-      const studyField = state.manifest.attributes.indexOf('study_name');
-      const personField = state.manifest.attributes.indexOf('individual');
+      if (request !== state.request) return;
+      const stride = manifest.attributes.length;
+      const studyField = manifest.attributes.indexOf('study_name');
+      const personField = manifest.attributes.indexOf('individual');
       const missingIdentity = name => ['', 'nan', 'none', 'na', 'null', 'unknown', '<na>'].includes(String(name).trim().toLowerCase());
-      const studyValid = state.manifest.codebooks.study_name.map(name => !missingIdentity(name));
-      const personValid = state.manifest.codebooks.individual.map(name => !missingIdentity(name));
+      const studyValid = manifest.codebooks.study_name.map(name => !missingIdentity(name));
+      const personValid = manifest.codebooks.individual.map(name => !missingIdentity(name));
       const patientKeys = new Uint32Array(info.cells);
       for (let i = 0; i < info.cells; i++) {
         const study = attrs[i * stride + studyField], person = attrs[i * stride + personField];
         if (studyValid[study] && personValid[person]) patientKeys[i] = study * 65536 + person + 1;
       }
       data = { info, coords, attrs, matched, rows, patientKeys };
-      state.cache.set(lineage, data);
+      state.cache.set(cacheKey, data);
     }
     if (request !== state.request) return;
     state.lineage = lineage; state.data = data;
@@ -343,15 +396,19 @@ function applyFilters(reset = false) {
   const { attrs, matched, coords, info } = state.data;
   const stride = state.manifest.attributes.length;
   const studyField = state.manifest.attributes.indexOf('study_name');
+  const tissueField = state.manifest.attributes.indexOf('tissue');
   const subtypeField = state.manifest.attributes.indexOf('cell_subtype_v3');
   const study = state.study === 'all' ? null : Number(state.study);
+  const tissue = state.tissue === 'all' ? null : Number(state.tissue);
   let count = 0;
-  for (let i = 0; i < info.cells; i++) if (matched[i] && (study === null || attrs[i * stride + studyField] === study)) count++;
+  for (let i = 0; i < info.cells; i++) if (matched[i] && (study === null || attrs[i * stride + studyField] === study)
+    && (tissue === null || attrs[i * stride + tissueField] === tissue)) count++;
   const indices = new Uint32Array(count), positions = new Float32Array(count * 2), colors = new Uint8Array(count * 3);
   const palette = state.manifest.codebooks.cell_subtype_v3.map((name) => colorRGB(state.manifest.colors[name] || '#b4bcb0'));
   let offset = 0;
   for (let i = 0; i < info.cells; i++) {
-    if (!matched[i] || (study !== null && attrs[i * stride + studyField] !== study)) continue;
+    if (!matched[i] || (study !== null && attrs[i * stride + studyField] !== study)
+      || (tissue !== null && attrs[i * stride + tissueField] !== tissue)) continue;
     indices[offset] = i; positions[offset * 2] = coords[i * 2]; positions[offset * 2 + 1] = coords[i * 2 + 1];
     const color = palette[attrs[i * stride + subtypeField]];
     colors[offset * 3] = color[0]; colors[offset * 3 + 1] = color[1]; colors[offset * 3 + 2] = color[2]; offset++;
@@ -362,9 +419,10 @@ function applyFilters(reset = false) {
   buildGrid();
   refreshGeneOptions();
   updateSelection();
-  const studies = new Set();
-  for (const i of indices) studies.add(attrs[i * stride + studyField]);
-  $('cohort-number').textContent = fmt(count); $('study-count').textContent = `${studies.size} 项研究`;
+  const studies = new Set(), people = new Set();
+  for (const i of indices) { studies.add(attrs[i * stride + studyField]); if (state.data.patientKeys[i]) people.add(state.data.patientKeys[i]); }
+  $('cohort-number').textContent = fmt(count);
+  $('study-count').textContent = tissueField >= 0 ? `${people.size} 位供者` : `${studies.size} 项研究`;
   $('display-count').textContent = `${fmt(count)} 个细胞 · 全量显示`;
   $('reference-empty').textContent = count ? '' : '当前筛选下没有细胞';
   if (reset || !state.view) resetView(); else scheduleDraw();
@@ -469,7 +527,7 @@ function updateSelection() {
     gene ? (summary.carrierTotal ? '' : `当前队列没有携带该${pair ? '组合' : '基因'}的细胞`) :
       (state.direction === 'subtype' ? '从下方基因排名中选择一项' :
         (pair ? '从下方选择同一条链的 V 和 J 基因' : '从下方选择一个 V/J 基因'));
-  $('distribution-description').textContent = gene ? `${gene} · ${state.lineage} · RNA–TCR 已匹配 · ${fmt(summary.carrierTotal)} 个携带细胞` : '选择基因后查看各亚型的携带率与构成。';
+  $('distribution-description').textContent = gene ? `${state.datasetInfo.label} · ${gene} · ${state.lineage} · RNA–TCR 已匹配 · ${fmt(summary.carrierTotal)} 个携带细胞` : '选择基因后查看各亚型的携带率与构成。';
   $('call-quality').textContent = `${pair ? state.chain + ' V+J' : state.locus} 有效 ${fmt(summary.validTotal)} · 缺失 ${fmt(summary.missingTotal)} · 不确定 ${fmt(summary.ambiguousTotal)}`;
   $('table-note').textContent = pair
     ? '有效细胞：同一条链的 V、J 两个位点均有明确调用；携带细胞：同时匹配所选 V 和 J。所有比例均基于当前筛选队列；分母为 0 时显示“—”。'
@@ -574,7 +632,7 @@ function renderGeneRanking() {
   $('rank-subtype').innerHTML = subtypes.map((s) => `<option value="${s.code}">${esc(s.label)}</option>`).join('');
   $('rank-subtype').value = String(state.rankSubtype);
   const subtype = subtypes.find((s) => s.code === state.rankSubtype), pair = state.mode === 'pair';
-  const key = [state.lineage, state.study, state.cohort, state.mode, state.locus, state.rankSubtype].join('|');
+  const key = [state.dataset, state.lineage, state.study, state.tissue, state.cohort, state.mode, state.locus, state.rankSubtype].join('|');
   if (key !== state.rankKey) {
     const start = performance.now();
     state.rankData = subtypeGeneCounts(state.data.attrs, state.filtered, state.manifest.attributes.length,
@@ -592,7 +650,7 @@ function renderGeneRanking() {
   const offset = state.rankPage * state.rankPageSize, shown = filtered.slice(offset, offset + state.rankPageSize);
   const selected = selectionName();
   $('ranking-title').textContent = `${subtype.label} · ${pair ? state.chain + ' V+J 组合' : state.locus} 排名`;
-  $('ranking-description').textContent = `${fmt(state.rankData.subtypeCells)} 个亚型细胞 · ${fmt(state.rankData.subtypeValid)} 个有效细胞 · ${fmt(state.rankRows.length)} 个已观察${pair ? '组合' : '基因'}。点击名称查看 UMAP。`;
+  $('ranking-description').textContent = `${state.datasetInfo.label} · ${fmt(state.rankData.subtypeCells)} 个亚型细胞 · ${fmt(state.rankData.subtypeValid)} 个有效细胞 · ${fmt(state.rankRows.length)} 个已观察${pair ? '组合' : '基因'}。点击名称查看 UMAP。`;
   $('ranking-quality').textContent = `缺失 ${fmt(state.rankData.subtypeMissing)} · 不确定 ${fmt(state.rankData.subtypeAmbiguous)}`;
   const activeRow = state.rankRows.find(r => r.gene === state.gene && (!pair || r.partner === state.geneJ));
   $('ranking-selection').innerHTML = `<span>${selected ? `已选 ${esc(selected)} · 此亚型 ${fmt(activeRow?.carriers || 0)} 个携带细胞 · 全队列高亮 ${fmt(state.summary.carrierTotal)} 个` : '点击基因名称选择，再查看右侧 UMAP 中的携带细胞。'}</span><button type="button" data-jump="maps">查看 UMAP ↑</button>`;
@@ -658,9 +716,11 @@ function hoverCell(canvas, event) {
   if (best < 0) { tooltip.hidden = true; return; }
   const stride = state.manifest.attributes.length, book = state.manifest.codebooks;
   const value = (field) => book[field][state.data.attrs[best * stride + state.manifest.attributes.indexOf(field)]];
+  const sample = state.manifest.samples?.find(item => item.sample === value('sample_name'));
+  const sourceRow = state.data.rows[best] - (sample?.global_row_offset || 0);
   tooltip.innerHTML = `<strong>${esc(value('cell_subtype_v3'))}</strong><br><span>${esc(value('study_name'))} · ${esc(value('sample_name'))}</span><br>
     <div class="tooltip-genes">${state.manifest.loci.map((l) => `<div>${l} <strong>${esc(value(l))}</strong></div>`).join('')}</div>
-    <span>源 RNA 行 ${fmt(state.data.rows[best])} · ${state.data.matched[best] ? 'TCR 已匹配' : 'TCR 表未匹配'}</span>`;
+    <span>${sample ? '本样本' : '源'} RNA 行 ${fmt(sourceRow)} · ${state.data.matched[best] ? 'TCR 已匹配' : 'TCR 表未匹配'}</span>`;
   tooltip.hidden = false;
   tooltip.style.left = `${Math.max(8, Math.min(event.clientX + 15, innerWidth - tooltip.offsetWidth - 12))}px`;
   tooltip.style.top = `${Math.max(8, Math.min(event.clientY + 15, innerHeight - tooltip.offsetHeight - 12))}px`;
@@ -682,10 +742,10 @@ async function init() {
       refreshGeneOptions(); updateSelection();
     });
     renderers = [new UmapRenderer($('reference-canvas'), true), new UmapRenderer($('highlight-canvas'), false)];
-    state.manifest = await fetchJSON('/data/manifest.json');
-    if (state.manifest.version !== 1) throw new Error('数据版本不兼容，请重新导出数据。');
-    $('study-select').innerHTML = '<option value="all">全部研究</option>' + state.manifest.codebooks.study_name
-      .map((name, code) => `<option value="${code}">${esc(name)}</option>`).join('');
+    state.catalog = await fetchJSON('/data/datasets.json');
+    if (state.catalog.version !== 1) throw new Error('数据集目录版本不兼容。');
+    $('dataset-select').innerHTML = state.catalog.datasets.map(item => `<option value="${esc(item.id)}">${esc(item.label)}</option>`).join('');
+    $('dataset-select').addEventListener('change', e => loadDataset(e.target.value));
     document.querySelectorAll('[data-lineage]').forEach((b) => b.addEventListener('click', () => {
       if (b.dataset.lineage !== state.lineage) loadLineage(b.dataset.lineage);
     }));
@@ -703,6 +763,7 @@ async function init() {
     $('rank-prev').addEventListener('click', () => { if (!state.loading && state.rankPage > 0) { state.rankPage--; renderGeneRanking(); } });
     $('rank-next').addEventListener('click', () => { if (!state.loading) { state.rankPage++; renderGeneRanking(); } });
     $('study-select').addEventListener('change', (e) => { state.study = e.target.value; applyFilters(); });
+    $('tissue-select').addEventListener('change', (e) => { state.tissue = e.target.value; applyFilters(true); });
     $('quick-genes').addEventListener('click', (e) => { const b = e.target.closest('[data-gene]'); if (b) {
       if (state.mode === 'pair') state.geneJ = Number(b.dataset.geneJ);
       chooseGene(Number(b.dataset.gene));
@@ -715,7 +776,7 @@ async function init() {
     new IntersectionObserver(entries => { $('explorer-dock').hidden = entries[0].isIntersecting || !state.data; }).observe(document.querySelector('.gene-section'));
     mobileLayout.addEventListener('change', () => { state.rankPageSize = mobileLayout.matches ? 10 : 25; state.rankPage = 0; if (state.data && state.direction === 'subtype') renderGeneRanking(); });
     new ResizeObserver(() => { if (state.data) scheduleDraw(); }).observe($('reference-stage'));
-    await loadLineage('CD8');
+    await loadDataset(state.catalog.default);
     state.initialMs = performance.now() - start;
   } catch (error) { showError(error); }
 }
@@ -725,7 +786,7 @@ window.tcrExplorer = Object.freeze({
   patients: () => state.patients ? { unknownCells: state.patients.unknownCells,
     bySubtype: state.patients.bySubtype.map(s => ({ ...s })),
     rows: state.patients.rows.map(row => ({ ...row, subtypes: Array.from(row.subtypes) })) } : null,
-  snapshot: () => ({ lineage: state.lineage, mode: state.mode, chain: state.chain, locus: state.locus, gene: state.gene,
+  snapshot: () => ({ dataset: state.dataset, tissue: state.tissue, lineage: state.lineage, mode: state.mode, chain: state.chain, locus: state.locus, gene: state.gene,
     direction: state.direction, rankSubtype: state.rankSubtype, rankSort: state.rankSort,
     locusJ: state.mode === 'pair' ? partnerLocus() : null, geneJ: state.geneJ,
     geneName: selectionName(),

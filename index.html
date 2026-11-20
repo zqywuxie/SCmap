@@ -13,7 +13,7 @@
   <div class="app-shell">
     <header class="masthead">
       <a class="wordmark" href="./" aria-label="TCRCellNet 首页"><span class="brand-icon" aria-hidden="true"><i></i><i></i><i></i></span>TCRCellNet<span class="brand-divider">/</span><span class="brand-section">V/J Atlas</span></a>
-      <span class="atlas-tag"><span class="status-dot"></span> Pan-disease · Human T cells</span>
+      <span class="atlas-tag"><span class="status-dot"></span><span id="dataset-tag">Human T cells</span></span>
     </header>
 
     <main>
@@ -25,11 +25,15 @@
       <div class="toolbar" aria-label="队列筛选">
         <div class="lineage-toggle" aria-label="细胞谱系"><button type="button" class="active" data-lineage="CD8" aria-pressed="true">CD8 <span>T cells</span></button><button type="button" data-lineage="CD4" aria-pressed="false">CD4 <span>T cells</span></button></div>
         <div class="filter-controls">
-          <label class="select-label">研究来源<select id="study-select" aria-label="研究来源"><option value="all">全部研究</option></select></label>
+          <label class="select-label dataset-filter">数据集<select id="dataset-select" aria-label="数据集"></select></label>
+          <label class="select-label" id="study-filter">研究来源<select id="study-select" aria-label="研究来源"><option value="all">全部研究</option></select></label>
+          <label class="select-label" id="tissue-filter" hidden>组织<select id="tissue-select" aria-label="组织"><option value="all">Blood + Tonsil</option></select></label>
           <span class="matched-badge">RNA–TCR 已匹配细胞</span>
         </div>
         <button type="button" class="reset-button" id="reset-view" title="恢复两图的初始视角"><span aria-hidden="true">↺</span> 重置视角</button>
       </div>
+
+      <p id="dataset-description" class="dataset-description"></p>
 
       <div id="notice" role="status" aria-live="polite" class="notice">正在读取真实图谱数据…</div>
 

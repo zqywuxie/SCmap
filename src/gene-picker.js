@@ -113,7 +113,7 @@ export class GenePicker {
     if (!this.visible.length) {
       const empty = document.createElement('p');
       empty.className = 'picker-empty';
-      empty.textContent = '没有匹配的基因，请更换关键词或研究来源';
+      empty.textContent = '没有匹配的基因，请更换关键词或队列筛选';
       this.list.append(empty);
     }
     this.active = -1;

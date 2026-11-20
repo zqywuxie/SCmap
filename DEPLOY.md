@@ -2,7 +2,7 @@
 
 ## 架构与依赖
 
-GitHub main → deploy.sh 拉取 → 校验 8 个浏览器数组 → Docker 构建 → 临时端口验证 Nginx 和 manifest → 替换正式容器 → 健康检查。失败时恢复上一容器。切换有数秒中断，Docker 重启后容器自动恢复。旧容器保留为 `scmap-previous`，旧镜像不会自动删除。
+GitHub main → deploy.sh 拉取 → 按数据集目录校验全部 16 个浏览器数组 → Docker 构建 → 临时端口验证 Nginx 和 datasets.json → 替换正式容器 → 健康检查。失败时恢复上一容器。切换有数秒中断，Docker 重启后容器自动恢复。旧容器保留为 `scmap-previous`，旧镜像不会自动删除。
 
 需要 Bash、Git、curl、Python ≥3.9、util-linux 的 flock，以及可使用的 Docker Engine。无 GPU、Node、npm 或 Python 第三方包要求；浏览器在客户端用 WebGL 绘图。建议预留 1 GB 可用内存和 2 GB 磁盘用于镜像及历史版本。
 
@@ -68,6 +68,8 @@ location / {
 ```bash
 curl -f http://127.0.0.1:10323/healthz
 curl -f http://127.0.0.1:10323/data/manifest.json
+curl -f http://127.0.0.1:10323/data/datasets.json
+curl -f http://127.0.0.1:10323/data/TABLO/manifest.json
 docker ps --filter name=scmap
 docker logs --tail 100 scmap
 ```
